@@ -3,6 +3,7 @@ body {
   height: 100%;
 }
 
+/* imagem do body na pagina */
 body.login-background{
   background-image: url(/IMG/blur_panoramica_muriaé.png);
   background-size: cover;
@@ -31,6 +32,13 @@ body.login-background{
   border-top-right-radius: 0;
 }
 
+/* altera a cor do botão checkbox do tipo switch */
+.form-check-input:checked{
+  background-color: #003A8C;
+  border-color: #003A8C;
+}
+
+/* customização do botão de submit no formulario de login */
 .btn-custom{
   background-color: #0071CE;
   color: #ffffff;
