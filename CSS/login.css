@@ -3,6 +3,13 @@ body {
   height: 100%;
 }
 
+body.login-background{
+  background-image: url(/IMG/blur_panoramica_muriaé.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 .form-signin {
   max-width: 330px;
   padding: 1rem;

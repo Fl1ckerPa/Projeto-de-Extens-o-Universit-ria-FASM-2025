@@ -12,29 +12,36 @@
     <!-- Estilo opcional removido por ora -->
      <link href="/CSS/login.css" rel="stylesheet"> 
   </head>
-  <body class=" d-flex align-items-center py-4 bg-body-tertiary">    
+  <body class="login-background d-flex align-items-center py-4 bg-body-tertiary">
     <main class="form-signin w-100 m-auto">
-      <form>
-        <!-- Imagem substituída por uma pública do Bootstrap -->
-        <img class="mb-4" src="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo.svg" alt="Logo Descubra Muriaé" width="72" height="57">
-        <h1 class="h3 mb-3 fw-normal">Faça seu Login</h1>
+      <div class="card shadow rounded-4">
+        <div class="card-body p-3">
+          <form>
+            <!-- Imagem substituída por uma pública do Bootstrap -->
+            <div class="d-flex justify-content-center align-items-center rounded-5">
+              <!-- FIXME  (class="rounded-circle") usada para arredondar elementos semelhante a um icone de usuário -->
+              <img class="mb-4" src="/IMG/logo_descubra_short.png" alt="Logo Descubra Muriaé" width="70" height="70">
+            </div>
+            <h1 class="d-flex justify-content-center align-items-center h3 mb-3 fw-normal">Login</h1>
 
-        <div class="form-floating">
-          <input type="email" class="form-control" id="floatingInput" placeholder="nome@exemplo.com" required>
-          <label for="floatingInput">Email</label>
-        </div>
-        <div class="form-floating">
-          <input type="password" class="form-control" id="floatingPassword" placeholder="Senha" required>
-          <label for="floatingPassword">Digite Sua Senha</label>
-        </div>
+            <div class="form-floating">
+              <input type="email" class="form-control form-control-sm" id="floatingInput" placeholder="nome@exemplo.com" required>
+              <label class="text-muted" for="floatingInput">Email</label>
+            </div>
+            <div class="form-floating">
+              <input type="password" class="form-control form-control-sm" id="floatingPassword" placeholder="Senha" required>
+              <label class="text-muted" for="floatingPassword">Digite Sua Senha</label>
+            </div>
 
-        <div class="form-check text-start my-3">
-          <input class="form-check-input" type="checkbox" value="remember-me" id="flexCheckDefault">
-          <label class="form-check-label" for="flexCheckDefault">Lembrar usuário</label>
+            <div class="form-check text-start my-3">
+              <input class="form-check-input" type="checkbox" value="remember-me" id="flexCheckDefault">
+              <label class="form-check-label text-muted" for="flexCheckDefault">Lembrar usuário</label>
+            </div>
+            <button class="btn btn-custom w-100 py-2" type="submit">ENTRAR</button>
+            <p class="mt-5 mb-3 text-body-secondary">&copy;Descubra Muriaé-2025</p>
+          </form>
         </div>
-        <button class="btn btn-custom w-100 py-2" type="submit">ENTRAR</button>
-        <p class="mt-5 mb-3 text-body-secondary">&copy;Descubra Muriaé-2025</p>
-      </form>
+      </div>
     </main>
   </body>
 </html>
