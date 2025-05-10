@@ -51,3 +51,13 @@ body.login-background{
   transform: scale(1.02);
   transition: all 0.3s ease;
 }
+
+.bg-form-login{
+  background-color:#d4d2d2 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0,125rem,25rem rgba(0,0,0,0.075) !important;
+}
+
+.fs-7{
+  font-size: 0.75rem !important;
+}
