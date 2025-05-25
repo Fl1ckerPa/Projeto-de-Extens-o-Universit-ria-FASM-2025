@@ -13,7 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #194b94;
+    background-color: #003A8C;
     color: white;
     padding: 10px 20px;
   }
@@ -49,7 +49,7 @@
   .sidebar a {
     display: block;
     margin-bottom: 10px;
-    color: #003366;
+    color: #003A8C;
     text-decoration: none;
   }
 
