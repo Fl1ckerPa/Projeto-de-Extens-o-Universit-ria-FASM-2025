@@ -4,6 +4,10 @@
     box-sizing: border-box;
   }
 
+  .bg-azulPrimario{
+  background-color: #003A8C;
+  }
+
   body, html {
     font-family: Arial, sans-serif;
     height: 100%;
@@ -16,22 +20,6 @@
     background-color: #003A8C;
     color: white;
     padding: 10px 20px;
-  }
-
-  header .search-box {
-    flex: 1;
-    margin: 0 20px;
-  }
-
-  header input[type="text"] {
-    width: 100%;
-    padding: 5px;
-    border: none;
-    border-radius: 4px;
-  }
-
-  header .logout {
-    cursor: pointer;
   }
 
   .container {
@@ -62,4 +50,15 @@
     font-size: 28px;
     border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
+  }
+
+  .dropdown-item:hover{
+  background-color: #003A8C !important ;
+  color:#ffffff !important ;
+  transform: scale(1.02) !important;
+  transition: all 0.3s ease !important;
+  }
+
+  .sidebar-card{
+    border: none;
   }
