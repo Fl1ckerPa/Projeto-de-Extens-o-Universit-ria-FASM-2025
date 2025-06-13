@@ -4,7 +4,7 @@ body {
 }
 
 /* imagem do body na pagina */
-body.login-background{
+body.login-background {
   background-image: url(/IMG/blur_panoramica_muriaé.png);
   background-size: cover;
   background-position: center;
@@ -33,31 +33,37 @@ body.login-background{
 }
 
 /* altera a cor do botão checkbox do tipo switch */
-.form-check-input:checked{
+.form-check-input:checked {
   background-color: #003A8C;
   border-color: #003A8C;
 }
 
 /* customização do botão de submit no formulario de login */
-.btn-custom{
+.btn-custom {
   background-color: #0071CE;
   color: #ffffff;
 
 }
 
-.btn-custom:hover{
+.btn-custom:hover {
   background-color: #003A8C;
   color: #ffffff;
   transform: scale(1.02);
   transition: all 0.3s ease;
 }
 
-.bg-form-login{
-  background-color:#d4d2d2 !important;
+.bg-form-login {
+  background-color: #d4d2d2 !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0,125rem,25rem rgba(0,0,0,0.075) !important;
+  box-shadow: 0, 125rem, 25rem rgba(0, 0, 0, 0.075) !important;
 }
 
-.fs-7{
+.fs-7 {
   font-size: 0.75rem !important;
+}
+
+.form-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
 }
