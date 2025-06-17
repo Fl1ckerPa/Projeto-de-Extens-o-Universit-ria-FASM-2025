@@ -4,6 +4,6 @@ O projeto de extensão universitária (EXTUNI) tem como objetivo unir alunos com
 Link para o drive do projeto: (https://drive.google.com/drive/u/6/home)
 
 Email : extensaouniversitaria.2025@gmail.com
-senha : Extuni2025@
+
 
 ![imagem do drive](image.png)
