@@ -1,0 +1,19 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.card {
+    width: 100px !important;
+    height: 150px !important;
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Faz a imagem preencher o card mantendo proporção e cortando se necessário */
+    border-radius: 8px;
+    /* opcional, para deixar as bordas arredondadas */
+}
