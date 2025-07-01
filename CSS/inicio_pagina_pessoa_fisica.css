@@ -21,6 +21,7 @@ body, html {
   }
 }
 
+
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -38,6 +39,7 @@ body, html {
 .card-img-top {
   object-fit: cover;
   height: 100%;
+  
 }
 
 /* Sidebar fixa e empurrando conteúdo em telas grandes */
