@@ -11,7 +11,7 @@ body, html {
   align-items: center;
   width: 100vw;
   box-sizing: border-box;
-  margin-top: 300px;
+  margin-top: 0;
   padding-left: 250px;
 }
 
@@ -30,26 +30,14 @@ body, html {
   margin: 0 auto;
 }
 
-.card_pessoa_fisica {
-  background: #8b7a7a;
-  border-radius: 8px;
+.card {
   aspect-ratio: 1/1.2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-width: 180px;
-  max-width: 260px;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
-.card_pessoa_fisica img {
-  width: 70%;
-  height: auto;
-  border-radius: 50%;
-  background: #fff;
-  padding: 16px;
+.card-img-top {
   object-fit: cover;
+  height: 100%;
 }
 
 /* Sidebar fixa e empurrando conteúdo em telas grandes */
@@ -58,9 +46,30 @@ body, html {
   left: 0;
   top: 60px; /* altura do header */
   width: 250px;
-  height: 100vh;
+  height: calc(100dvh - 60px); /* Sidebar sempre do tamanho da tela, descontando header */
   z-index: 1000;
   transition: left 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-bottom: 80px; /* Espaço para o avatar */
+}
+
+#sidebarContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar-avatar {
+  position: absolute;
+  left: 16px;
+  bottom: 0;
+  width: auto;
+  display: flex;
+  justify-content: flex-start;
+  padding-bottom: 16px;
 }
 
 /* Em telas pequenas, sidebar sobrepõe o conteúdo */
@@ -68,15 +77,37 @@ body, html {
   #sidebar {
     position: fixed;
     left: 0;
-    top: 60px; /* altura do header */
+    top: 60px;
     width: 250px;
-    height: 100vh;
-    z-index: 2000; /* maior que o conteúdo */
-    /* Exemplo: fundo levemente transparente */
+    height: calc(100dvh - 60px);
+    z-index: 2000;
     background: #003A8C;
     box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: 80px;
+  }
+  #sidebarContent {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .sidebar-avatar {
+    position: absolute;
+    left: 16px;
+    bottom: 0;
+    width: auto;
+    display: flex;
+    justify-content: flex-start;
+    padding-bottom: 16px;
   }
   .painel-container {
     padding-left: 0;
   }
+}
+
+#sidebarContent h5 + .list-unstyled {
+  margin-top: 30px;
 }
