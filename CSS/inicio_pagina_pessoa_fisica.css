@@ -4,24 +4,6 @@ body, html {
   padding: 0;
 }
 
-.painel-container {
-  min-height: calc(100vh - 60px); /* Ajuste 60px para a altura real do seu header */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  box-sizing: border-box;
-  margin-top: 0;
-  padding-left: 250px;
-}
-
-@media (max-width: 768px) {
-  .painel-container {
-    padding-left: 0;
-  }
-}
-
-
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -42,74 +24,14 @@ body, html {
   
 }
 
-/* Sidebar fixa e empurrando conteúdo em telas grandes */
-#sidebar {
-  position: fixed;
-  left: 0;
-  top: 60px; /* altura do header */
-  width: 250px;
-  height: calc(100dvh - 60px); /* Sidebar sempre do tamanho da tela, descontando header */
-  z-index: 1000;
-  transition: left 0.3s;
+
+.painel-container {
+  min-height: calc(100vh - 60px); 
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-bottom: 80px; /* Espaço para o avatar */
-}
-
-#sidebarContent {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.sidebar-avatar {
-  position: absolute;
-  left: 16px;
-  bottom: 0;
-  width: auto;
-  display: flex;
-  justify-content: flex-start;
-  padding-bottom: 16px;
-}
-
-/* Em telas pequenas, sidebar sobrepõe o conteúdo */
-@media (max-width: 768px) {
-  #sidebar {
-    position: fixed;
-    left: 0;
-    top: 60px;
-    width: 250px;
-    height: calc(100dvh - 60px);
-    z-index: 2000;
-    background: #003A8C;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-bottom: 80px;
-  }
-  #sidebarContent {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .sidebar-avatar {
-    position: absolute;
-    left: 16px;
-    bottom: 0;
-    width: auto;
-    display: flex;
-    justify-content: flex-start;
-    padding-bottom: 16px;
-  }
-  .painel-container {
-    padding-left: 0;
-  }
-}
-
-#sidebarContent h5 + .list-unstyled {
-  margin-top: 30px;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  box-sizing: border-box;
+  margin-top: 0;
+  padding-left: 250px;
 }

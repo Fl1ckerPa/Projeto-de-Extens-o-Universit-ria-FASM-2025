@@ -1,79 +1,66 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  .bg-azulPrimario{
+.bg-azulPrimario {
   background-color: #003A8C;
-  }
+}
 
-  body, html {
-    font-family: Arial, sans-serif;
-    height: 100%;
-  }
+body,
+html {
+  font-family: Arial, sans-serif;
+  height: 100%;
+}
 
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #003A8C;
-    color: white;
-    padding: 10px 20px;
-  }
+/* TO FIX */
+/* Estilos abaixo referentes a sidebar da pag index  */
+.sidebar {
+  width: 200px;
+  background-color: #f5f5f5;
+  border-right: 1px solid #ccc;
+  padding: 20px;
+}
 
-  .container {
-    display: flex;
-    height: calc(100vh - 50px);
-  }
+.sidebar a {
+  display: block;
+  margin-bottom: 10px;
+  color: #003A8C;
+  text-decoration: none;
+}
 
-  .sidebar {
-    width: 200px;
-    background-color: #f5f5f5;
-    border-right: 1px solid #ccc;
-    padding: 20px;
-  }
+.main {
+  flex: 1;
+  padding: 20px;
+}
 
-  .sidebar a {
-    display: block;
-    margin-bottom: 10px;
-    color: #003A8C;
-    text-decoration: none;
-  }
+.main h1 {
+  font-size: 28px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
 
-  .main {
-    flex: 1;
-    padding: 20px;
-  }
-
-  .main h1 {
-    font-size: 28px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-  }
-
-  .dropdown-item:hover{
-  background-color: #003A8C !important ;
-  color:#ffffff !important ;
+.dropdown-item:hover {
+  background-color: #003A8C !important;
+  color: #ffffff !important;
   transform: scale(1.02) !important;
   transition: all 0.3s ease !important;
-  }
+}
 
-  .sidebar-card{
-    border: none;
-  }
+.sidebar-card {
+  border: none;
+}
 
-  .card_pessoa_fisica {
-    width: 100%;
-    height: 300px;
-    border: none;
+.card_pessoa_fisica {
+  width: 100%;
+  height: 300px;
+  border: none;
 }
 
 .card_pessoa_fisica img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* Faz a imagem preencher o card mantendo proporção e cortando se necessário */
-    border-radius: 8px;
-    /* opcional, para deixar as bordas arredondadas */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
