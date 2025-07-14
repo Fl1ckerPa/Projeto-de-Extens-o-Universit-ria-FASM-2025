@@ -4,6 +4,10 @@ body, html {
   padding: 0;
 }
 
+.bg-azulPrimario {
+  background-color: #003A8C;
+}
+
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
