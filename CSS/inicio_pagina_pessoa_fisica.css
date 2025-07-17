@@ -5,7 +5,7 @@ body, html {
 }
 
 .bg-azulPrimario {
-  background-color: #003A8C;
+  background-color: #003A8C !important;
 }
 
 .grid-cards {
