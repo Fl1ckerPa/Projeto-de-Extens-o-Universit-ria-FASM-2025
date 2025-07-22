@@ -1,4 +1,15 @@
 /* Exibe a dica para inserir a senha */
+
+// popover-init.js
+
+document.addEventListener("DOMContentLoaded", function () {
+  const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+  popoverTriggerList.forEach(function (popoverTriggerEl) {
+    new bootstrap.Popover(popoverTriggerEl);
+  });
+});
+
+/*
 const senhaInput = document.getElementById("senha")
 const senhaDica = document.getElementById("senhaDica")
 
@@ -11,6 +22,8 @@ senhaInput.addEventListener('blur',() =>{
     console.log('sem Foco no input');
     senhaDica.classList.add('d-none');
 });
+*/
+
 /* --------------------------------------------------------------------------------------------- */
 
 /*  | Modal seletor de tipo de cadastro / login |

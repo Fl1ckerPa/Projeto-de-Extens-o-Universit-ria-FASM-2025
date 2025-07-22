@@ -45,7 +45,11 @@
     <div class="form-floating mb-2">
       <input type="password" class="form-control form-control-sm bg-form-login" id="senha" name="senha"
         placeholder="Senha" autocomplete="off" required />
-      <label for="senha">Digite sua senha</label>
+      <label for="senha">Digite sua senha <i class="bi bi-question-circle" data-bs-toggle="popover"
+          data-bs-trigger="hover focus" data-bs-placement="right" title="Requisitos da Senha"
+          data-bs-content="• Mínimo de 8 caracteres • Uma letra maiúscula • Uma letra minúscula • Um número"
+          data-bs-html="true">
+        </i></label>
     </div>
     <!-- ----------------- -->
 
@@ -54,6 +58,9 @@
       <a href="../HTML/cadastro.html" class="link-primary text-decoration-none fs-7">Cadastre-se</a>
     </div>
     </div>
+    
+    <!-- 
+    
     <div class="form-text text-muted mb-3 d-none" id="senhaDica">
       <span id="senhaDica" class="form-text text-muted mt-3 d-none">
         <a>A senha deve conter :</a>
@@ -64,6 +71,9 @@
         </ul>
       </span>
     </div>
+    
+    -->
+
 
     <div class="form-check  form-switch text-start mt-3 mb-4">
       <input class="form-check-input" type="checkbox" value="remember-me" id="flexCheckDefault">
