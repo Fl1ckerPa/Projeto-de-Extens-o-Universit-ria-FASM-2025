@@ -1,3 +1,22 @@
+:root {
+  --brand-900: #0e2233;
+  --brand-700: #1b3b5a;
+  --brand-500: #003A8C;   /* primária */
+  --brand-300: #8fb6e8;
+  --brand-100: #e7f0fb;
+
+  --accent-500: #ffb703;   /* destaque */
+  --success-500: #2ea44f;
+  --warning-500: #f59f00;
+  --danger-500: #d6336c;
+
+  --text-900: #0b1720;
+  --text-700: #2e3a46;
+  --muted-500: #6c757d;
+  --bg-100: #f7f9fc;
+  --white: #ffffff;
+}
+
 html,
 body {
   height: 100%;
@@ -5,7 +24,7 @@ body {
 
 /* imagem do body na pagina */
 body.login-background {
-  background-image: url(/IMG/blur_panoramica_muriaé.png);
+  background-image: url(../IMG/blur_panoramica_muriaé.png);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -34,28 +53,28 @@ body.login-background {
 
 /* altera a cor do botão checkbox do tipo switch */
 .form-check-input:checked {
-  background-color: #003A8C;
-  border-color: #003A8C;
+  background-color: var(--brand-500);
+  border-color: var(--brand-500);
 }
 
 /* customização do botão de submit no formulario de login */
 .btn-custom {
-  background-color: #0071CE;
-  color: #ffffff;
+  background-color: var(--brand-500);
+  color: var(--white);
 
 }
 
 .btn-custom:hover {
-  background-color: #003A8C;
-  color: #ffffff;
+  background-color: var(--brand-700);
+  color: var(--white);
   transform: scale(1.02);
   transition: all 0.3s ease;
 }
 
 .bg-form-login {
-  background-color: #d4d2d2 !important;
+  background-color: var(--brand-100) !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0, 125rem, 25rem rgba(0, 0, 0, 0.075) !important;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
 }
 
 .fs-7 {

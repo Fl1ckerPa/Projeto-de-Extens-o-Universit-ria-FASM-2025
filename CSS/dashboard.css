@@ -1,3 +1,6 @@
+/* -------------------- */
+/* Tokens de design     */
+/* -------------------- */
 :root {
   --brand-900: #0e2233;
   --brand-700: #1b3b5a;
@@ -18,19 +21,27 @@
 }
 
 
+/* -------------------- */
+/* Base                 */
+/* -------------------- */
 body { background: var(--bg-100); color: var(--text-900); }
 .card { border: none; }
 .table > :not(caption) > * > * { box-shadow: inset 0 0 0 9999px var(--tbl-bg, transparent); }
 
 
-#topbar {
-  background: #003A8C
-}
+/* -------------------- */
+/* Topbar               */
+/* -------------------- */
+#topbar { background: var(--brand-500); }
 #topbar .navbar-brand, #topbar .nav-link, #topbar .navbar-text { color: var(--white); }
 #topbar .nav-link.active { font-weight: 600; text-decoration: underline; text-underline-offset: 6px; }
 #topbar .btn-primary { background-color: var(--accent-500); border-color: var(--accent-500); color: #1a1a1a; }
 #topbar .btn-primary:hover { opacity: .9; }
 
+
+/* -------------------- */
+/* KPIs                 */
+/* -------------------- */
 .kpi { transition: transform .1s ease, box-shadow .2s ease; cursor: pointer; }
 .kpi:hover { transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,.08) !important; }
 .kpi.active { outline: 3px solid var(--brand-300); }
@@ -43,23 +54,32 @@ body { background: var(--bg-100); color: var(--text-900); }
 .kpi i { opacity: .65; }
 
 
+/* -------------------- */
+/* Tabela               */
+/* -------------------- */
 .table thead th {
   background: var(--brand-100);
   color: var(--text-700);
   font-weight: 600;
   border-bottom: 2px solid var(--brand-300);
 }
-.table tbody tr:hover td { background: #fff; }
+.table tbody tr:hover td { background: var(--white); }
 .badge.bg-prioridade-baixo { background: #adb5bd; }
 .badge.bg-prioridade-médio, .badge.bg-prioridade-medio { background: var(--brand-500); }
 .badge.bg-prioridade-alto { background: var(--danger-500); }
 
 
+/* -------------------- */
+/* Form e Botões        */
+/* -------------------- */
 .form-label { color: var(--text-700); }
 .btn-primary { background-color: var(--brand-500); border-color: var(--brand-500); }
 .btn-primary:hover { background-color: var(--brand-700); border-color: var(--brand-700); }
 
 
+/* -------------------- */
+/* Badges de status     */
+/* -------------------- */
 .text-bg-success { background-color: var(--success-500) !important; }
 .text-bg-warning { background-color: var(--warning-500) !important; }
 .text-bg-danger  { background-color: var(--danger-500) !important; }

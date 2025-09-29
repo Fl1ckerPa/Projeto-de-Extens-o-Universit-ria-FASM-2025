@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     //validar email
     if (empty($email)) {
-        $erros = "O campo e-mail é obrigatorio.";
+        $erros[] = "O campo e-mail é obrigatorio.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $erros[] = "Email inválido.";
     }
@@ -31,16 +31,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     //exibir erros ou acerto
     if (!empty($erros)) {
-        echo "<h3>Erros encontrados:</hr><ul>";
-        foreach ($erros as $erro) {
-            echo "<li>$erro</li>";
-        }
-        echo "</ul><a href='javascript:history.back()'>Voltar</a>";
+        $title = 'Erros no login';
+        $messages = $erros;
+        $type = 'error';
+        $links = [ '../HTML/login.html' => 'Voltar ao login' ];
+        include __DIR__ . '/partials/layout.php';
     } else {
-        echo "<h3>Login validado com sucesso!</h3>";
-        echo "<p><strong>Email:</strong> $email</p>";
-        echo "<p><strong>Senha:</strong> (oculta)</p>";
-        echo "<a href='painel.html'>Ir para o painel</a>";
+        $title = 'Login validado com sucesso!';
+        $messages = [
+          '<strong>Email:</strong> ' . htmlspecialchars($email),
+          '<strong>Senha:</strong> (oculta)'
+        ];
+        $type = 'success';
+        $links = [ '../HTML/dashboard.html' => 'Ir para o painel' ];
+        include __DIR__ . '/partials/layout.php';
     }
 } else {
     echo "Acesso inválido.";

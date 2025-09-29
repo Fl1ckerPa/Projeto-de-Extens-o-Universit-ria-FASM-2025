@@ -18,7 +18,7 @@
 
 <body class="login-background d-flex align-items-center py-4 bg-body-tertiary">
   <!-- FORMULÁRIO INICIALMENTE ESCONDIDO -->
-  <form method="POST" action="cadastro.php" id="formCadastro" class="form-container shadow rounded-4 bg-white d-none">
+  <form method="POST" action="../PHP/login.php" id="formCadastro" class="form-container shadow rounded-4 bg-white d-none">
     <input type="hidden" name="tipoCadastro" id="tipoCadastro" />
     <div class="text-center">
       <img src="../IMG/logo_descubra_short.png" alt="Logo Descubra Muriaé" width="70" height="70" class="mb-4" />
@@ -102,16 +102,15 @@
     </div>
   </div>
   <!-- FIM DO MODAL -->
-  <!-- Incluindo Jquerry na página -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+  <!-- IMask para máscaras de entrada -->
+  <script src="https://unpkg.com/imask"></script>
 
   <!-- Incluindo o Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-..."
     crossorigin="anonymous"></script>
 
-  <!-- Incluindo o script custon para as paginas de login e cadastro -->
-  <script src="../JS/login_cadastro.js"></script>
+  <!-- Incluindo o script custom para as páginas de login e cadastro -->
+  <script type="module" src="../JS/login_cadastro.js"></script>
 </body>
 
 </html>
