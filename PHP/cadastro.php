@@ -1,77 +1,130 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    function limparEntrada($dado) {
-        return htmlspecialchars(stripslashes(trim($dado)));
-}
+/**
+ * Processa cadastro de usuário (PF ou PJ)
+ * Versão refatorada usando bibliotecas do AtomPHP
+ */
 
-//coleta de dados
-$nome = limparEntrada($_POST["nome"] ?? '');
-$cpf = limparEntrada($_POST["cpf"] ?? '');
-$cnpj = limparEntrada($_POST["cnpj"] ?? '');
-$tipoCadastro = limparEntrada($_POST["tipoCadastro"] ?? '');
-$email = limparEntrada($_POST["email"] ?? '');
-$senha = $_POST["senha"] ?? '';
-$senhaVerif = $_POST["senhaverif"] ?? '';
+require_once __DIR__ . '/../lib/bootstrap.php';
+
+if (!Request::isPost()) {
+    Helper::jsonError('Método não permitido', null, 405);
+}
 
 $erros = [];
 
-// Remover máscaras
-$cpf = preg_replace('/\D+/', '', $cpf);
-$cnpj = preg_replace('/\D+/', '', $cnpj);
+// Coletar dados
+$dados = [
+    'nome' => Request::post('nome', ''),
+    'cpf' => preg_replace('/\D+/', '', Request::post('cpf', '')),
+    'cnpj' => preg_replace('/\D+/', '', Request::post('cnpj', '')),
+    'tipoCadastro' => Request::post('tipoCadastro', ''),
+    'email' => Request::post('email', ''),
+    'senha' => Request::post('senha', ''),
+    'senhaVerif' => Request::post('senhaverif', '')
+];
 
-if (empty($nome)) {
-    $erros[] = "O campo nome é Obrigatorio!";
+// Validações
+if (empty($dados['nome'])) {
+    $erros[] = 'O campo nome é obrigatório!';
 }
 
-if ($tipoCadastro === 'pf') {
-    if (empty($cpf)) {
-        $erros[] = "CPF obrigatório!";
-    } elseif (!preg_match('/^\d{11}$/', $cpf)) {
-        $erros[] = "O CPF deve conter exatamente 11 números.";
+if ($dados['tipoCadastro'] === 'pf') {
+    if (empty($dados['cpf'])) {
+        $erros[] = 'CPF obrigatório!';
+    } elseif (!Helper::validarCPF($dados['cpf'])) {
+        $erros[] = 'CPF inválido.';
     }
-} elseif ($tipoCadastro === 'pj') {
-    if (empty($cnpj)) {
-        $erros[] = "CNPJ obrigatório!";
-    } elseif (!preg_match('/^\d{14}$/', $cnpj)) {
-        $erros[] = "O CNPJ deve conter exatamente 14 números.";
+} elseif ($dados['tipoCadastro'] === 'pj') {
+    if (empty($dados['cnpj'])) {
+        $erros[] = 'CNPJ obrigatório!';
+    } elseif (!Helper::validarCNPJ($dados['cnpj'])) {
+        $erros[] = 'CNPJ inválido.';
     }
 } else {
-    $erros[] = "Tipo de cadastro inválido (selecione PF ou PJ).";
+    $erros[] = 'Tipo de cadastro inválido (selecione PF ou PJ).';
 }
 
- if (empty($email)) {
-    $erros[] = "O campo email é obrigatório.";
-} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $erros[] = "Email inválido.";
+// Validar email
+$rules = [
+    'email' => ['label' => 'Email', 'rules' => 'required|email']
+];
+
+if (!Validator::make(['email' => $dados['email']], $rules)) {
+    $erros = array_merge($erros, array_values(Validator::getErrors()));
 }
 
-if (empty($senha) || empty($senhaVerif)) {
-    $erros[] = "Ambos os campos de senha são obrigatórios.";
-} elseif ($senha !== $senhaVerif) {
-    $erros[] = "As senhas não sao identicas.";   
-} elseif (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,20}$/', $senha)) {
-    $erros[] = "A senha deve ter entre 8 e 20 caracteres, conter letras, números e um caractere especial.";
+// Validar senha
+if (empty($dados['senha']) || empty($dados['senhaVerif'])) {
+    $erros[] = 'Ambos os campos de senha são obrigatórios.';
+} elseif ($dados['senha'] !== $dados['senhaVerif']) {
+    $erros[] = 'As senhas não são idênticas.';
+} elseif (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,20}$/', $dados['senha'])) {
+    $erros[] = 'A senha deve ter entre 8 e 20 caracteres, conter letras, números e um caractere especial.';
 }
 
+// Se houver erros
 if (!empty($erros)) {
     $title = 'Erros no cadastro';
     $messages = $erros;
     $type = 'error';
-    $links = [ '../HTML/cadastro.html' => 'Voltar ao cadastro' ];
+    $links = ['../HTML/cadastro.html' => 'Voltar ao cadastro'];
     include __DIR__ . '/partials/layout.php';
-} else {
-    $title = 'Cadastro validado com sucesso!';
-    $messages = [
-        '<strong>Nome:</strong> ' . htmlspecialchars($nome),
-        ($tipoCadastro === 'pf' ? ('<strong>CPF:</strong> ' . htmlspecialchars($cpf)) : ('<strong>CNPJ:</strong> ' . htmlspecialchars($cnpj))),
-        '<strong>Email:</strong> ' . htmlspecialchars($email),
-        '<strong>Senha:</strong> (oculta por segurança)'
-    ];
-    $type = 'success';
-    $links = [ '../HTML/login.html' => 'Ir para login' ];
-    include __DIR__ . '/partials/layout.php';
-}    
-} else {
-    echo "Acesso inválido.";
-    }
-?>
+    exit;
+}
+
+// Aqui você salvaria no banco
+// Exemplo:
+/*
+$db = new Database();
+$tabela = $dados['tipoCadastro'] === 'pj' ? 'empresas' : 'pessoas';
+$identificador = $dados['tipoCadastro'] === 'pj' ? 'cnpj' : 'cpf';
+$valorIdentificador = $dados['tipoCadastro'] === 'pj' ? $dados['cnpj'] : $dados['cpf'];
+
+// Verificar se já existe
+$existe = $db->table($tabela)
+    ->where($identificador, $valorIdentificador)
+    ->first();
+
+if ($existe) {
+    Helper::jsonError('CPF/CNPJ já cadastrado.');
+}
+
+// Verificar email
+$existeEmail = $db->table($tabela)
+    ->where('email', $dados['email'])
+    ->first();
+
+if ($existeEmail) {
+    Helper::jsonError('Email já cadastrado.');
+}
+
+// Inserir
+$dadosInsert = [
+    'nome' => $dados['nome'],
+    $identificador => $valorIdentificador,
+    'email' => $dados['email'],
+    'senha' => Helper::hashSenha($dados['senha']),
+    'created_at' => date('Y-m-d H:i:s')
+];
+
+$id = $db->table($tabela)->insert($dadosInsert);
+
+if ($id) {
+    Session::set('msgSuccess', 'Cadastro realizado com sucesso!');
+    Helper::jsonSuccess('Cadastro realizado com sucesso!', ['id' => $id]);
+}
+*/
+
+// Sucesso (placeholder)
+$title = 'Cadastro validado com sucesso!';
+$messages = [
+    '<strong>Nome:</strong> ' . htmlspecialchars($dados['nome']),
+    ($dados['tipoCadastro'] === 'pf' 
+        ? ('<strong>CPF:</strong> ' . Helper::formatarCPF($dados['cpf']))
+        : ('<strong>CNPJ:</strong> ' . Helper::formatarCNPJ($dados['cnpj']))),
+    '<strong>Email:</strong> ' . htmlspecialchars($dados['email']),
+    '<strong>Senha:</strong> (oculta por segurança)'
+];
+$type = 'success';
+$links = ['../HTML/login.html' => 'Ir para login'];
+include __DIR__ . '/partials/layout.php';

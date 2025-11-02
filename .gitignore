@@ -1,0 +1,31 @@
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Configurações locais
+lib/config.local.php
+
+# Logs
+*.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Composer
+/vendor/
+
+# Node
+node_modules/
+
+# Arquivos temporários
+*.tmp
+*.cache
+

@@ -31,7 +31,7 @@ $dados = [
 $rules = [
     'nome' => ['label' => 'Nome completo', 'rules' => 'required|min:3'],
     'endereco' => ['label' => 'Endereço', 'rules' => 'required'],
-    'telefone' => ['label' => 'Telefone', 'rules' => 'required|telefone'],
+    'telefone' => ['label' => 'Telefone', 'rules' => 'required'],
     'email' => ['label' => 'E-mail', 'rules' => 'required|email'],
     'genero' => ['label' => 'Gênero', 'rules' => 'required'],
     'nascimento' => ['label' => 'Data de nascimento', 'rules' => 'required|date'],
@@ -46,10 +46,9 @@ if (!Validator::make($dados, $rules)) {
 // Validar arquivos
 $files = new Files();
 
-// Foto (1MB, jpg/jpeg/png/gif)
+// Foto
 if (!empty($_FILES['foto']['name'])) {
-    $filesFoto = new Files(null, ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'], 1);
-    $resultado = $filesFoto->upload($_FILES['foto'], 'curriculos', 'foto');
+    $resultado = $files->upload($_FILES['foto'], 'curriculos', 'foto');
     if (!$resultado['status']) {
         $erros[] = 'Foto: ' . $resultado['message'];
     } else {
@@ -57,15 +56,9 @@ if (!empty($_FILES['foto']['name'])) {
     }
 }
 
-// Certificado (5MB, pdf/jpg/jpeg/png)
+// Certificado
 if (!empty($_FILES['certificado']['name'])) {
-    $filesCert = new Files(null, [
-        'application/pdf',
-        'image/jpeg', 
-        'image/jpg', 
-        'image/png'
-    ], 5);
-    $resultado = $filesCert->upload($_FILES['certificado'], 'curriculos', 'certificado');
+    $resultado = $files->upload($_FILES['certificado'], 'curriculos', 'certificado');
     if (!$resultado['status']) {
         $erros[] = 'Certificado: ' . $resultado['message'];
     } else {
@@ -73,15 +66,9 @@ if (!empty($_FILES['certificado']['name'])) {
     }
 }
 
-// Currículo (10MB, pdf/doc/docx/txt)
+// Currículo
 if (!empty($_FILES['curriculo']['name'])) {
-    $filesCurr = new Files(null, [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
-    ], 10);
-    $resultado = $filesCurr->upload($_FILES['curriculo'], 'curriculos', 'curriculo');
+    $resultado = $files->upload($_FILES['curriculo'], 'curriculos', 'curriculo');
     if (!$resultado['status']) {
         $erros[] = 'Currículo: ' . $resultado['message'];
     } else {
@@ -128,15 +115,6 @@ if (!empty($erros)) {
 /*
 $db = new Database();
 try {
-    $experiencias = [];
-    for ($i = 0; $i < count($empresas); $i++) {
-        $experiencias[] = [
-            'empresa' => limpar($empresas[$i]),
-            'cargo' => limpar($cargos[$i]),
-            'atividades' => limpar($atividades[$i])
-        ];
-    }
-    
     $id = $db->table('curriculos')->insert([
         'nome' => $dados['nome'],
         'endereco' => $dados['endereco'],
@@ -150,17 +128,10 @@ try {
         'foto' => $dados['foto'] ?? null,
         'certificado' => $dados['certificado'] ?? null,
         'curriculo' => $dados['curriculo'] ?? null,
-        'experiencias' => json_encode($experiencias),
         'created_at' => date('Y-m-d H:i:s')
     ]);
-} catch (\Exception $e) {
+} catch (Exception $e) {
     $erros[] = 'Erro ao salvar: ' . $e->getMessage();
-    $title = 'Erro no cadastro';
-    $messages = $erros;
-    $type = 'error';
-    $links = ['../HTML/Cadastro_de_currículo.html' => 'Voltar'];
-    include __DIR__ . '/partials/layout.php';
-    exit;
 }
 */
 
@@ -173,3 +144,4 @@ $messages = [
 $type = 'success';
 $links = ['../HTML/index.html' => 'Voltar ao início'];
 include __DIR__ . '/partials/layout.php';
+
