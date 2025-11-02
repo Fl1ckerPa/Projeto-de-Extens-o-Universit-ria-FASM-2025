@@ -1,11 +1,13 @@
 :root {
   --brand-900: #0e2233;
   --brand-700: #1b3b5a;
-  --brand-500: #003A8C;   /* primária */
+  --brand-500: #003A8C;
+  /* primária */
   --brand-300: #8fb6e8;
   --brand-100: #e7f0fb;
 
-  --accent-500: #ffb703;   /* destaque */
+  --accent-500: #ffb703;
+  /* destaque */
   --success-500: #2ea44f;
   --warning-500: #f59f00;
   --danger-500: #d6336c;
@@ -16,13 +18,16 @@
   --bg-100: #f7f9fc;
   --white: #ffffff;
 }
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-.bg-azulPrimario { background-color: var(--brand-500); }
+.bg-azulPrimario {
+  background-color: var(--brand-500);
+}
 
 body,
 html {
@@ -39,7 +44,12 @@ html {
   padding: 20px;
 }
 
-.sidebar a { display: block; margin-bottom: 10px; color: var(--brand-500); text-decoration: none; }
+.sidebar a {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--brand-500);
+  text-decoration: none;
+}
 
 .main {
   flex: 1;
