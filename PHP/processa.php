@@ -124,8 +124,7 @@ if (!empty($erros)) {
     exit;
 }
 
-// Salvar no banco (exemplo - você precisa criar a tabela)
-/*
+// Salvar no banco
 $db = new Database();
 try {
     $experiencias = [];
@@ -136,7 +135,6 @@ try {
             'atividades' => limpar($atividades[$i])
         ];
     }
-    
     $id = $db->table('curriculos')->insert([
         'nome' => $dados['nome'],
         'endereco' => $dados['endereco'],
@@ -162,7 +160,6 @@ try {
     include __DIR__ . '/partials/layout.php';
     exit;
 }
-*/
 
 // Sucesso
 $title = 'Cadastro recebido com sucesso!';

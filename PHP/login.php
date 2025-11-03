@@ -18,30 +18,30 @@ $cpf = preg_replace('/\D+/', '', Request::post('cpf', ''));
 $cnpj = preg_replace('/\D+/', '', Request::post('cnpj', ''));
 $senha = Request::post('senha', '');
 
-// Validação
+// Validação (sem verificação de dígitos verificadores - apenas tamanho)
 if ($tipo === 'pf') {
     if (empty($cpf)) {
         $erros[] = 'O campo CPF é obrigatório para Pessoa Física.';
-    } elseif (!Helper::validarCPF($cpf)) {
-        $erros[] = 'CPF inválido.';
+    } elseif (strlen($cpf) !== 11) {
+        $erros[] = 'CPF deve conter 11 dígitos.';
     }
 } elseif ($tipo === 'pj') {
     if (empty($cnpj)) {
         $erros[] = 'O campo CNPJ é obrigatório para Pessoa Jurídica.';
-    } elseif (!Helper::validarCNPJ($cnpj)) {
-        $erros[] = 'CNPJ inválido.';
+    } elseif (strlen($cnpj) !== 14) {
+        $erros[] = 'CNPJ deve conter 14 dígitos.';
     }
 } else {
     // Fallback: tentar inferir pelo preenchimento
     if (!empty($cpf) && empty($cnpj)) {
         $tipo = 'pf';
-        if (!Helper::validarCPF($cpf)) {
-            $erros[] = 'CPF inválido.';
+        if (strlen($cpf) !== 11) {
+            $erros[] = 'CPF deve conter 11 dígitos.';
         }
     } elseif (!empty($cnpj) && empty($cpf)) {
         $tipo = 'pj';
-        if (!Helper::validarCNPJ($cnpj)) {
-            $erros[] = 'CNPJ inválido.';
+        if (strlen($cnpj) !== 14) {
+            $erros[] = 'CNPJ deve conter 14 dígitos.';
         }
     } else {
         $erros[] = 'Selecione o tipo de cadastro (PF ou PJ) e preencha CPF ou CNPJ.';
@@ -72,42 +72,84 @@ if (!empty($erros)) {
     exit;
 }
 
-// Aqui você faria a autenticação no banco
-// Exemplo:
-/*
+// Autenticação no banco
 $db = new Database();
-$identificador = $tipo === 'pj' ? $cnpj : $cpf;
-$tabela = $tipo === 'pj' ? 'empresas' : 'pessoas';
+$identificador = $tipo === 'pj' ? $cnpj : $cpf; // somente dígitos
+$tabela = $tipo === 'pj' ? 'usuarios_pj' : 'usuarios_pf';
+$campo = $tipo === 'pj' ? 'cnpj' : 'cpf';
 
-$usuario = $db->table($tabela)
-    ->where($tipo === 'pj' ? 'cnpj' : 'cpf', $identificador)
-    ->first();
+$usuario = null;
 
-if ($usuario && Helper::verificarSenha($senha, $usuario['senha'])) {
-    Session::set('user_id', $usuario['id']);
-    Session::set('user_type', $tipo);
-    Session::set('user_nome', $usuario['nome']);
+try {
+    // Tentar com máscara primeiro
+    $identificadorMascarado = $tipo === 'pj' ? Helper::formatarCNPJ($identificador) : Helper::formatarCPF($identificador);
     
-    Helper::jsonSuccess('Login realizado com sucesso!', [
-        'tipo' => strtoupper($tipo),
-        'id' => $usuario['id']
-    ]);
-} else {
-    Helper::jsonError('CPF/CNPJ ou senha incorretos.');
+    $db->dbClear(); // Limpar query builder
+    $usuario = $db->table($tabela)
+        ->where($campo, $identificadorMascarado)
+        ->first();
+    
+    // Se não encontrou, tentar sem máscara
+    if (!$usuario) {
+        $db->dbClear(); // Limpar query builder
+        $usuario = $db->table($tabela)
+            ->where($campo, $identificador)
+            ->first();
+    }
+    
+    // Última tentativa: buscar todos e comparar apenas dígitos
+    if (!$usuario) {
+        $db->dbClear(); // Limpar query builder
+        $todos = $db->table($tabela)->findAll();
+        foreach ($todos as $u) {
+            $valorBanco = preg_replace('/\D+/', '', $u[$campo]);
+            if ($valorBanco === $identificador) {
+                $usuario = $u;
+                break;
+            }
+        }
+    }
+} catch (\Exception $e) {
+    // Erro na busca - continuar normalmente para mostrar mensagem genérica
+    error_log("Erro ao buscar usuário: " . $e->getMessage());
 }
-*/
 
-// Sucesso (placeholder)
-$idLabel = $tipo === 'pj' ? 'CNPJ' : 'CPF';
-$idValor = $tipo === 'pj' ? $cnpj : $cpf;
-$mascarado = str_repeat('•', max(0, strlen($idValor) - 4)) . substr($idValor, -4);
+if ($usuario) {
+    // Verificar senha
+    $senhaValida = Helper::verificarSenha($senha, $usuario['senha']);
+    
+    if ($senhaValida) {
+        // Salvar dados na sessão
+        Session::set('user_id', $usuario['id']);
+        Session::set('user_type', $tipo);
+        Session::set('user_nome', $usuario['nome']);
+        Session::set('user_email', $usuario['email'] ?? '');
+        
+        // Redirecionar para página inicial (PF ou PJ)
+        if ($tipo === 'pf') {
+            header('Location: ../HTML/inicio_pessoa_fisica.html');
+        } else {
+            // Se tiver página para PJ, redirecionar para ela, senão vai para PF também
+            header('Location: ../HTML/inicio_pessoa_fisica.html');
+        }
+        exit;
+    } else {
+        // Senha incorreta
+        $title = 'Erro no login';
+        $messages = ['Senha incorreta.'];
+        $type = 'error';
+        $links = ['../HTML/login.html' => 'Voltar ao login'];
+        include __DIR__ . '/partials/layout.php';
+        exit;
+    }
+} else {
+    // Usuário não encontrado
+    $title = 'Erro no login';
+    $messages = ['CPF/CNPJ não encontrado no sistema.'];
+    $type = 'error';
+    $links = ['../HTML/login.html' => 'Voltar ao login'];
+    include __DIR__ . '/partials/layout.php';
+    exit;
+}
 
-$title = 'Login validado com sucesso!';
-$messages = [
-    '<strong>Tipo:</strong> ' . strtoupper($tipo),
-    '<strong>' . $idLabel . ':</strong> ' . $mascarado,
-    '<strong>Senha:</strong> (oculta)'
-];
-$type = 'success';
-$links = ['../HTML/dashboard.html' => 'Ir para o painel'];
-include __DIR__ . '/partials/layout.php';
+// (sem placeholder)

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Arquivo de Configuração
  * Adaptado do AtomPHP para uso sem MVC
