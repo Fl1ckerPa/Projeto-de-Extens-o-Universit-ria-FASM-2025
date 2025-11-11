@@ -37,6 +37,9 @@ require_once __DIR__ . '/Request.php';
 require_once __DIR__ . '/Files.php';
 require_once __DIR__ . '/Validator.php';
 require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/Response.php';
+require_once __DIR__ . '/Schema.php';
+require_once __DIR__ . '/auth.php';
 
 // Função auxiliar para limpar strings (mantida para compatibilidade)
 if (!function_exists('limpar')) {

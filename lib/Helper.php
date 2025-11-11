@@ -253,5 +253,20 @@ class Helper
         }
         Helper::jsonResponse($response, $statusCode);
     }
+
+    /**
+     * Envia email usando mail() do PHP
+     */
+    public static function enviarEmail($para, $assunto, $mensagem, $headers = null)
+    {
+        if ($headers === null) {
+            $headers = "MIME-Version: 1.0\r\n";
+            $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+            $headers .= "From: Descubra Muriaé <noreply@descubramuriae.com.br>\r\n";
+            $headers .= "Reply-To: noreply@descubramuriae.com.br\r\n";
+        }
+        
+        return mail($para, $assunto, $mensagem, $headers);
+    }
 }
 

@@ -1,7 +1,6 @@
 <?php
 /**
- * Processa login (PF ou PJ)
- * Versão refatorada usando bibliotecas do AtomPHP
+ * Processa login (PF ou PJ) utilizando o esquema normalizado.
  */
 
 require_once __DIR__ . '/../lib/bootstrap.php';
@@ -18,7 +17,7 @@ $cpf = preg_replace('/\D+/', '', Request::post('cpf', ''));
 $cnpj = preg_replace('/\D+/', '', Request::post('cnpj', ''));
 $senha = Request::post('senha', '');
 
-// Validação (sem verificação de dígitos verificadores - apenas tamanho)
+// Validação de identificadores
 if ($tipo === 'pf') {
     if (empty($cpf)) {
         $erros[] = 'O campo CPF é obrigatório para Pessoa Física.';
@@ -74,82 +73,84 @@ if (!empty($erros)) {
 
 // Autenticação no banco
 $db = new Database();
-$identificador = $tipo === 'pj' ? $cnpj : $cpf; // somente dígitos
-$tabela = $tipo === 'pj' ? 'usuarios_pj' : 'usuarios_pf';
-$campo = $tipo === 'pj' ? 'cnpj' : 'cpf';
-
-$usuario = null;
+$pdo = $db->connect();
 
 try {
-    // Tentar com máscara primeiro
-    $identificadorMascarado = $tipo === 'pj' ? Helper::formatarCNPJ($identificador) : Helper::formatarCPF($identificador);
-    
-    $db->dbClear(); // Limpar query builder
-    $usuario = $db->table($tabela)
-        ->where($campo, $identificadorMascarado)
-        ->first();
-    
-    // Se não encontrou, tentar sem máscara
-    if (!$usuario) {
-        $db->dbClear(); // Limpar query builder
-        $usuario = $db->table($tabela)
-            ->where($campo, $identificador)
-            ->first();
-    }
-    
-    // Última tentativa: buscar todos e comparar apenas dígitos
-    if (!$usuario) {
-        $db->dbClear(); // Limpar query builder
-        $todos = $db->table($tabela)->findAll();
-        foreach ($todos as $u) {
-            $valorBanco = preg_replace('/\D+/', '', $u[$campo]);
-            if ($valorBanco === $identificador) {
-                $usuario = $u;
-                break;
-            }
+    Schema::ensureNormalizedSchema($pdo);
+
+    if ($tipo === 'pf') {
+        $stmt = $pdo->prepare('SELECT u.usuario_id, u.senha_hash, p.nome, p.email, p.pessoa_id, ut.codigo AS role_codigo
+                               FROM pessoa p
+                               INNER JOIN usuario u ON u.pessoa_id = p.pessoa_id
+                               INNER JOIN usuario_tipo ut ON ut.usuario_tipo_id = u.usuario_tipo_id
+                               WHERE p.cpf = ?
+                               LIMIT 1');
+        $stmt->execute([$cpf]);
+        $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $empresaId = null;
+    } else {
+        $stmt = $pdo->prepare('SELECT empresa_id, email FROM empresa WHERE cnpj = ? LIMIT 1');
+        $stmt->execute([$cnpj]);
+        $empresa = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$empresa) {
+            $usuario = false;
+        } else {
+            $stmt = $pdo->prepare('SELECT u.usuario_id, u.senha_hash, p.nome, p.email, p.pessoa_id, ut.codigo AS role_codigo
+                                   FROM usuario u
+                                   INNER JOIN pessoa p ON p.pessoa_id = u.pessoa_id
+                                   INNER JOIN usuario_tipo ut ON ut.usuario_tipo_id = u.usuario_tipo_id
+                                   WHERE u.login = ?
+                                   LIMIT 1');
+            $stmt->execute([$empresa['email']]);
+            $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $empresaId = $empresa ? (int)$empresa['empresa_id'] : null;
         }
     }
 } catch (\Exception $e) {
-    // Erro na busca - continuar normalmente para mostrar mensagem genérica
-    error_log("Erro ao buscar usuário: " . $e->getMessage());
+    error_log('Erro ao realizar login: ' . $e->getMessage());
+    $usuario = false;
 }
 
-if ($usuario) {
-    // Verificar senha
-    $senhaValida = Helper::verificarSenha($senha, $usuario['senha']);
-    
-    if ($senhaValida) {
-        // Salvar dados na sessão
-        Session::set('user_id', $usuario['id']);
-        Session::set('user_type', $tipo);
-        Session::set('user_nome', $usuario['nome']);
-        Session::set('user_email', $usuario['email'] ?? '');
-        
-        // Redirecionar para página inicial (PF ou PJ)
-        if ($tipo === 'pf') {
-            header('Location: ../HTML/inicio_pessoa_fisica.html');
-        } else {
-            // Se tiver página para PJ, redirecionar para ela, senão vai para PF também
-            header('Location: ../HTML/inicio_pessoa_fisica.html');
-        }
-        exit;
-    } else {
-        // Senha incorreta
-        $title = 'Erro no login';
-        $messages = ['Senha incorreta.'];
-        $type = 'error';
-        $links = ['../HTML/login.html' => 'Voltar ao login'];
-        include __DIR__ . '/partials/layout.php';
-        exit;
-    }
-} else {
-    // Usuário não encontrado
+if (!$usuario) {
+    $title = 'Usuário não encontrado';
+    $messages = [
+        'O identificador informado (CPF/CNPJ) não está cadastrado.',
+        'Realize o cadastro antes de tentar fazer login.'
+    ];
+    $type = 'error';
+    $links = [
+        '../HTML/cadastro.html' => 'Fazer cadastro',
+        '../HTML/login.html' => 'Voltar ao login'
+    ];
+    include __DIR__ . '/partials/layout.php';
+    exit;
+}
+
+if (!Helper::verificarSenha($senha, $usuario['senha_hash'])) {
     $title = 'Erro no login';
-    $messages = ['CPF/CNPJ não encontrado no sistema.'];
+    $messages = ['Senha incorreta.'];
     $type = 'error';
     $links = ['../HTML/login.html' => 'Voltar ao login'];
     include __DIR__ . '/partials/layout.php';
     exit;
 }
 
-// (sem placeholder)
+Session::set('user_id', $usuario['usuario_id']);
+Session::set('user_type', $tipo);
+Session::set('user_nome', $usuario['nome']);
+Session::set('user_email', $usuario['email']);
+Session::set('pessoa_id', $usuario['pessoa_id']);
+if (!empty($usuario['role_codigo'])) {
+    Session::set('role_code', $usuario['role_codigo']); // e.g., ANUNC, GEST, CONT, ADMIN
+}
+if (isset($empresaId) && $empresaId) {
+    Session::set('empresa_id', $empresaId);
+}
+
+$redirect = Request::post('redirect', Request::get('redirect', ''));
+if (!empty($redirect)) {
+    header('Location: ' . urldecode($redirect));
+} else {
+    header('Location: ../HTML/index.html');
+}
+exit;

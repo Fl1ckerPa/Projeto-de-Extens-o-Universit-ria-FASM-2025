@@ -43,6 +43,33 @@ try {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
+    // Criar tabela administradores
+    $db->dbUpdate("CREATE TABLE IF NOT EXISTS administradores (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(160) NOT NULL,
+        email VARCHAR(160) NOT NULL UNIQUE,
+        senha VARCHAR(255) NOT NULL,
+        ativo TINYINT(1) DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email),
+        INDEX idx_ativo (ativo)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    // Criar tabela para tokens de reset de senha
+    $db->dbUpdate("CREATE TABLE IF NOT EXISTS reset_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(160) NOT NULL,
+        token VARCHAR(64) NOT NULL UNIQUE,
+        tipo_usuario ENUM('pf', 'pj') NOT NULL,
+        expires_at DATETIME NOT NULL,
+        used TINYINT(1) DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_token (token),
+        INDEX idx_email (email),
+        INDEX idx_expires (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
     // Limpar TODOS os dados antigos de teste
     try {
         // Limpar TODOS os usuários de teste (por email)
@@ -102,6 +129,21 @@ try {
     );
     echo "✓ Usuário PJ criado: {$cnpjFormatado}\n";
 
+    // Admin demo
+    $emailAdmin = 'admin@descubramuriae.local';
+    try {
+        $db->dbUpdate("DELETE FROM administradores WHERE email = '" . addslashes($emailAdmin) . "'");
+    } catch (\Exception $e) {
+        // Ignora
+    }
+    
+    $hashAdmin = Helper::hashSenha('Admin@123');
+    $db->dbInsert(
+        "INSERT INTO administradores (nome, email, senha, ativo) VALUES (?, ?, ?, ?)",
+        ['Administrador Demo', $emailAdmin, $hashAdmin, 1]
+    );
+    echo "✓ Administrador criado: {$emailAdmin}\n";
+
     echo "\n========================================\n";
     echo "Migração executada com sucesso!\n";
     echo "========================================\n\n";
@@ -112,6 +154,9 @@ try {
     echo "PESSOA JURÍDICA (PJ):\n";
     echo "  CNPJ: {$cnpjFormatado}\n";
     echo "  Senha: Teste@123\n\n";
+    echo "ADMINISTRADOR:\n";
+    echo "  Email: {$emailAdmin}\n";
+    echo "  Senha: Admin@123\n\n";
 } catch (Throwable $e) {
     http_response_code(500);
     echo "Erro ao migrar: " . $e->getMessage();

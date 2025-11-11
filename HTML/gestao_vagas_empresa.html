@@ -14,11 +14,13 @@
     />
     <link href="../CSS/gestao_vagas_empresa.css" rel="stylesheet" />
   </head>
-  <body>
-    <nav class="d-none d-md-block p-3" id="topbar">
+  <header>
+    <!-- Inicio Barra De Navegação Desktop -->
+    <nav class="d-none d-md-block p-3 bg-azulPrimario">
       <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-between">
-          <!-- Logo à esquerda -->
+        <div
+          class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start"
+        >
           <a
             href="index.html"
             class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none"
@@ -32,18 +34,112 @@
             />
           </a>
           <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-            <li><a href="#" class="nav-link px-2 text-secondary">Gestão de Vagas</a></li>
+            <li class="d-none"><a href="#" class="nav-link px-2 text-secondary">Home</a></li>
+            <li><a href="buscar_vagas.html" class="nav-link px-2 text-white">Vagas</a></li>
+            <li><a href="sobre_nos.html" class="nav-link px-2 text-white">Sobre Nós</a></li>
           </ul>
-          <!-- Botão Nova Vaga à direita -->
+          <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+            <input
+              type="search"
+              class="form-control form-control-dark text-bg-light"
+              placeholder="Pesquisar..."
+              aria-label="Search"
+            />
+          </form>
           <div class="text-end">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaVaga">
-              <i class="bi bi-plus-circle me-1"></i> Nova Vaga
-            </button>
+            <a class="btn btn-outline-light me-2" href="../HTML/login.html">Entrar</a>
+            <a class="btn btn-warning" href="../HTML/cadastro.html">Criar conta</a>
           </div>
         </div>
       </div>
     </nav>
+    <!-- Fim Barra De Navegação Desktop -->
 
+    <!-- Barra De Navegação Mobile -->
+    <nav class="d-block d-md-none navbar navbar-dark bg-azulPrimario fixed-top">
+      <div class="container-fluid">
+        <a
+          href="index.html"
+          class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none"
+        >
+          <img
+            src="../IMG/logo_descubra_short.png"
+            alt="Logo Descubra Muriaé"
+            width="40"
+            height="40"
+            class="g-3"
+          />
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#offcanvasDarkNavbar"
+          aria-controls="offcanvasDarkNavbar"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div
+          class="offcanvas offcanvas-end bg-azulPrimario text-light"
+          tabindex="-1"
+          id="offcanvasDarkNavbar"
+          aria-labelledby="offcanvasDarkNavbarLabel"
+        >
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Dark offcanvas</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="offcanvas-body bg-azulPrimario">
+            <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+              <li class="nav-item d-none">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="sobre_nos.html">Sobre Nós</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Dropdown
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark">
+                  <li><a class="dropdown-item" href="#">Action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li>
+                    <hr class="dropdown-divider" />
+                  </li>
+                  <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+              </li>
+            </ul>
+            <form class="d-flex mt-3" role="search">
+              <input
+                class="form-control me-2"
+                type="search"
+                placeholder="Search"
+                aria-label="Search"
+              />
+              <button class="btn btn-warning" type="submit">Search</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </nav>
+</header>
+
+
+  <body>
     <main class="container-fluid py-4">
       <!-- Filtros -->
       <section class="mb-3">
@@ -84,9 +180,12 @@
                   placeholder="Busque por título, descrição..."
                 />
               </div>
-              <div class="col-12 col-lg-5 d-grid d-md-flex justify-content-md-end">
+              <div class="col-12 col-lg-5 d-grid d-md-flex justify-content-md-end gap-2">
                 <button id="btnLimparFiltros" class="btn btn-outline-secondary mt-3 mt-lg-0">
                   <i class="bi bi-x-circle me-1"></i> Limpar filtros
+                </button>
+                <button class="btn btn-primary mt-3 mt-lg-0" data-bs-toggle="modal" data-bs-target="#modalNovaVaga">
+                  <i class="bi bi-plus-circle me-1"></i> Nova Vaga
                 </button>
               </div>
             </div>

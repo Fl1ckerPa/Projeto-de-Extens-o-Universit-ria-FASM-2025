@@ -15,9 +15,18 @@ if (!Request::isPost()) {
 $erros = [];
 
 // Coletar dados usando Request
+$rua = Request::post('rua', '');
+$numero = Request::post('numero', '');
+$bairro = Request::post('bairro', '');
+$cidade = Request::post('cidade', '');
+$cep = Request::post('cep', '');
+
+// Combinar campos de endereço em um único campo
+$enderecoCompleto = trim($rua . ($numero ? ', ' . $numero : '') . ($bairro ? ' - ' . $bairro : '') . ($cidade ? ', ' . $cidade : '') . ($cep ? ' - CEP: ' . $cep : ''));
+
 $dados = [
     'nome' => Request::post('nome', ''),
-    'endereco' => Request::post('endereco', ''),
+    'endereco' => $enderecoCompleto ?: Request::post('endereco', ''), // Fallback para campo único se existir
     'telefone' => Request::post('telefone', ''),
     'email' => Request::post('email', ''),
     'genero' => Request::post('genero', ''),
@@ -28,6 +37,16 @@ $dados = [
 ];
 
 // Validação usando Validator
+// Validar campos de endereço separados
+if (empty($rua) || empty($bairro) || empty($cidade)) {
+    $erros[] = 'Endereço incompleto. Preencha Rua, Bairro e Cidade.';
+}
+
+// Se endereço completo foi construído, validar
+if (empty($enderecoCompleto) && empty(Request::post('endereco', ''))) {
+    $erros[] = 'Endereço é obrigatório.';
+}
+
 $rules = [
     'nome' => ['label' => 'Nome completo', 'rules' => 'required|min:3'],
     'endereco' => ['label' => 'Endereço', 'rules' => 'required'],
@@ -89,27 +108,34 @@ if (!empty($_FILES['curriculo']['name'])) {
     }
 }
 
-// Validar experiências
+// Validar experiências (opcional, mas se houver, validar)
 $empresas = Request::post('empresa', []);
 $cargos = Request::post('cargo', []);
 $atividades = Request::post('atividades', []);
 
-if (!is_array($empresas) || !is_array($cargos) || !is_array($atividades)) {
-    $erros[] = 'Estrutura de experiências inválida.';
-} else {
+// Se não houver arrays, inicializar como arrays vazios
+if (!is_array($empresas)) $empresas = [];
+if (!is_array($cargos)) $cargos = [];
+if (!is_array($atividades)) $atividades = [];
+
+// Validar se houver experiências
+if (count($empresas) > 0) {
     if (count($empresas) > 5) {
         $erros[] = 'Excedido o limite de experiências (máx 5).';
     }
-    if (count($empresas) === 0) {
-        $erros[] = 'Informe ao menos uma experiência.';
-    }
+    
+    // Validar que cada experiência tem todos os campos preenchidos
     foreach ($empresas as $i => $empresa) {
         $empresa = limpar($empresa);
         $cargo = limpar($cargos[$i] ?? '');
         $atividade = limpar($atividades[$i] ?? '');
-        if ($empresa === '' || $cargo === '' || $atividade === '') {
-            $erros[] = 'Preencha Empresa, Cargo/Função e Atividades em todas as experiências.';
-            break;
+        
+        // Se pelo menos um campo estiver preenchido, todos devem estar
+        if (!empty($empresa) || !empty($cargo) || !empty($atividade)) {
+            if (empty($empresa) || empty($cargo) || empty($atividade)) {
+                $erros[] = 'Preencha Empresa, Cargo/Função e Atividades em todas as experiências.';
+                break;
+            }
         }
     }
 }
@@ -127,15 +153,31 @@ if (!empty($erros)) {
 // Salvar no banco
 $db = new Database();
 try {
+    // Processar experiências
     $experiencias = [];
-    for ($i = 0; $i < count($empresas); $i++) {
-        $experiencias[] = [
-            'empresa' => limpar($empresas[$i]),
-            'cargo' => limpar($cargos[$i]),
-            'atividades' => limpar($atividades[$i])
-        ];
+    if (count($empresas) > 0) {
+        for ($i = 0; $i < count($empresas); $i++) {
+            $empresa = limpar($empresas[$i] ?? '');
+            $cargo = limpar($cargos[$i] ?? '');
+            $atividade = limpar($atividades[$i] ?? '');
+            
+            // Só adicionar se todos os campos estiverem preenchidos
+            if (!empty($empresa) && !empty($cargo) && !empty($atividade)) {
+                $experiencias[] = [
+                    'empresa' => $empresa,
+                    'cargo' => $cargo,
+                    'atividades' => $atividade
+                ];
+            }
+        }
     }
-    $id = $db->table('curriculos')->insert([
+    
+    // Verificar se já existe currículo com esse email (atualizar ou inserir)
+    $curriculoExistente = $db->table('curriculos')
+        ->where('email', $dados['email'])
+        ->first();
+    
+    $dadosInsert = [
         'nome' => $dados['nome'],
         'endereco' => $dados['endereco'],
         'telefone' => $dados['telefone'],
@@ -144,19 +186,33 @@ try {
         'estado_civil' => $dados['estado_civil'],
         'nascimento' => $dados['nascimento'],
         'escolaridade' => $dados['escolaridade'],
-        'outros_cursos' => $dados['outros_cursos'],
+        'outros_cursos' => $dados['outros_cursos'] ?: null,
         'foto' => $dados['foto'] ?? null,
         'certificado' => $dados['certificado'] ?? null,
         'curriculo' => $dados['curriculo'] ?? null,
-        'experiencias' => json_encode($experiencias),
+        'experiencias' => count($experiencias) > 0 ? json_encode($experiencias) : null,
         'created_at' => date('Y-m-d H:i:s')
-    ]);
+    ];
+    
+    if ($curriculoExistente) {
+        // Atualizar currículo existente
+        $resultado = $db->table('curriculos')
+            ->where('email', $dados['email'])
+            ->update($dadosInsert);
+        $id = $curriculoExistente['id'];
+    } else {
+        // Inserir novo currículo
+        $id = $db->table('curriculos')->insert($dadosInsert);
+        if (!$id) {
+            throw new \Exception('Erro ao inserir currículo no banco de dados');
+        }
+    }
 } catch (\Exception $e) {
     $erros[] = 'Erro ao salvar: ' . $e->getMessage();
     $title = 'Erro no cadastro';
     $messages = $erros;
     $type = 'error';
-    $links = ['../HTML/Cadastro_de_currículo.html' => 'Voltar'];
+    $links = ['../HTML/index.html' => 'Voltar'];
     include __DIR__ . '/partials/layout.php';
     exit;
 }

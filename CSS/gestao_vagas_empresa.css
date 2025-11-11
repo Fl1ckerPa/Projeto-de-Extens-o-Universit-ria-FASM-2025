@@ -49,6 +49,34 @@ body {
 /* -------------------- */
 /* Topbar               */
 /* -------------------- */
+.bg-azulPrimario {
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%) !important;
+}
+
+/* Garantir que a navbar tenha exatamente o mesmo tamanho da página inicio_pessoa_fisica */
+nav.d-none.d-md-block.bg-azulPrimario {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+nav.d-block.d-md-none.navbar.bg-azulPrimario {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* Campo de pesquisa na navbar - mesma largura da página inicio_pessoa_fisica */
+nav.bg-azulPrimario form[role="search"] {
+  width: auto !important;
+  flex: 0 0 auto !important;
+}
+
+nav.bg-azulPrimario form[role="search"] .form-control {
+  width: 200px !important;
+  max-width: 200px !important;
+}
+
 #topbar {
   background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -224,6 +252,7 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* Estilos de formulário - não aplica na navbar */
 .form-control,
 .form-select {
   border: 2px solid #e9ecef;
@@ -236,6 +265,20 @@ body {
 .form-select:focus {
   border-color: var(--brand-500);
   box-shadow: 0 0 0 0.2rem rgba(0, 58, 140, 0.15);
+}
+
+/* Resetar estilos do form-control na navbar para usar padrão do Bootstrap */
+nav.bg-azulPrimario .form-control {
+  border: 1px solid #ced4da !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 1rem !important;
+  box-shadow: none !important;
+}
+
+nav.bg-azulPrimario .form-control:focus {
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
 }
 
 .btn-primary {

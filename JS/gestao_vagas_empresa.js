@@ -241,6 +241,22 @@ function renderTabela() {
   renderKPIs(vagas);
 
   const tbody = $('#tbodyVagas');
+  
+  if (lista.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5">
+          <div class="text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+            <p class="mb-0">Nenhuma vaga encontrada.</p>
+            <p class="small">Ajuste os filtros ou clique em "Nova Vaga" para criar uma.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
   tbody.innerHTML = lista.map(v => {
     const candidatosVaga = candidatos.filter(c => c.vagaId === v.id).length;
     const statusClass = v.status.toLowerCase();
@@ -252,7 +268,7 @@ function renderTabela() {
         <td><span class="badge bg-categoria-${categoriaClass}">${categoriaClass.charAt(0).toUpperCase() + categoriaClass.slice(1)}</span></td>
         <td>
           <span class="badge bg-primary">${candidatosVaga}</span>
-          ${candidatosVaga > 0 ? `<button class="btn btn-sm btn-outline-success ms-1" data-action="ver-candidatos" data-id="${v.id}">
+          ${candidatosVaga > 0 ? `<button class="btn btn-sm btn-outline-success ms-1" data-action="ver-candidatos" data-id="${v.id}" title="Ver candidatos">
             <i class="bi bi-people"></i>
           </button>` : ''}
         </td>
@@ -260,13 +276,13 @@ function renderTabela() {
         <td>${new Date(v.dataLimite).toLocaleDateString()}</td>
         <td><span class="badge bg-status-${statusClass}">${v.status}</span></td>
         <td class="text-nowrap">
-          <button class="btn btn-sm btn-outline-primary me-1" data-action="editar" data-id="${v.id}">
+          <button class="btn btn-sm btn-outline-primary me-1" data-action="editar" data-id="${v.id}" title="Editar vaga">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="btn btn-sm btn-outline-warning me-1" data-action="toggle-status" data-id="${v.id}">
+          <button class="btn btn-sm btn-outline-warning me-1" data-action="toggle-status" data-id="${v.id}" title="${v.status === 'Aberta' ? 'Pausar' : 'Retomar'} vaga">
             <i class="bi bi-${v.status === 'Aberta' ? 'pause' : 'play'}-circle"></i>
           </button>
-          <button class="btn btn-sm btn-outline-danger" data-action="excluir" data-id="${v.id}">
+          <button class="btn btn-sm btn-outline-danger" data-action="excluir" data-id="${v.id}" title="Excluir vaga">
             <i class="bi bi-trash"></i>
           </button>
         </td>

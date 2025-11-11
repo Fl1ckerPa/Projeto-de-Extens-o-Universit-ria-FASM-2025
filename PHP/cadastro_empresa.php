@@ -24,10 +24,9 @@ if (empty($cnpj) || !Helper::validarCNPJ($cnpj)) {
 // Validar dados obrigatórios
 $campos = [
     'nome_social' => 'Nome social',
-    'segmento' => 'Segmento',
-    'endereco' => 'Endereço',
-    'cidade' => 'Cidade',
-    'estado' => 'Estado',
+    'endereco' => 'Endereço (logradouro, número, complemento, bairro)',
+    'cidade' => 'Cidade (nome)',
+    'estado' => 'UF',
     'email' => 'Email',
     'telefone' => 'Telefone',
     'sobre' => 'Descrição'
@@ -92,46 +91,84 @@ if (!empty($erros)) {
 // Salvar no banco
 try {
     $db = new Database();
-    
-    // Verificar se CNPJ já existe
-    $existe = $db->table('empresas')
-        ->where('cnpj', $cnpj)
-        ->first();
-    
-    if ($existe) {
-        Helper::jsonError('CNPJ já cadastrado');
+    // Verificar se empresa já existe (por CNPJ ou e-mail)
+    $sqlExisteEmpresa = "SELECT empresa_id FROM empresa WHERE cnpj = ? OR email = ? LIMIT 1";
+    $resultExisteEmpresa = $db->dbSelect($sqlExisteEmpresa, [$dados['cnpj'], $dados['email']]);
+    $existeEmpresa = $db->dbBuscaArray($resultExisteEmpresa);
+    if ($existeEmpresa) {
+        Helper::jsonError('Email ou CNPJ já cadastrado');
+        return;
     }
-    
-    // Inserir empresa
-    $dadosInsert = [
-        'cnpj' => $dados['cnpj'],
-        'nome_social' => $dados['nome_social'],
-        'segmento' => $dados['segmento'],
-        'endereco' => $dados['endereco'],
-        'cidade' => $dados['cidade'],
-        'estado' => $dados['estado'],
-        'cep' => $dados['cep'],
-        'email' => $dados['email'],
-        'telefone' => $dados['telefone'],
-        'site' => $dados['site'],
-        'linkedin' => $dados['linkedin'],
-        'sobre' => $dados['sobre'],
-        'funcionarios' => $dados['funcionarios'],
-        'fundacao' => $dados['fundacao'],
-        'logo' => $logoPath,
-        'data_cadastro' => date('Y-m-d H:i:s'),
-        'ativo' => 1
-    ];
-    
-    $empresaId = $db->table('empresas')->insert($dadosInsert);
-    
-    if ($empresaId) {
-        Helper::jsonSuccess('Empresa cadastrada com sucesso!', [
-            'empresa_id' => $empresaId
-        ]);
-    } else {
-        Helper::jsonError('Erro ao salvar empresa no banco de dados');
+
+    // Resolver cidade_id (criar se não existir)
+    $cidadeNome = trim($dados['cidade']);
+    $uf = strtoupper(trim($dados['estado']));
+    $cidadeId = null;
+    try {
+        $rsCidade = $db->dbSelect("SELECT cidade_id FROM cidade WHERE cidade = ? AND uf = ? LIMIT 1", [$cidadeNome, $uf]);
+        $cidadeRow = $db->dbBuscaArray($rsCidade);
+        if ($cidadeRow) {
+            $cidadeId = (int)$cidadeRow['cidade_id'];
+        } else {
+            $cidadeId = (int)$db->dbInsert("INSERT INTO cidade (cidade, uf) VALUES (?, ?)", [$cidadeNome, $uf]);
+        }
+    } catch (\Exception $e) {
+        // Se a cidade não puder ser criada, segue nulo e o endereço fica sem FK
+        error_log('Cidade não encontrada/criada: ' . $e->getMessage());
     }
+
+    // Quebrar endereço livre (quando possível). Mantemos tudo em logradouro se não houver separação
+    $logradouro = $dados['endereco'];
+    $numero = null;
+    $complemento = null;
+    $bairro = null;
+
+    // Inserir empresa normalizada
+    $empresaId = $db->dbInsert(
+        "INSERT INTO empresa (cnpj, nome_social, email, site, linkedin, sobre, funcionarios, fundacao,
+                              logradouro, numero, complemento, bairro, cep, cidade_id, logo, ativo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+        [
+            $dados['cnpj'],
+            $dados['nome_social'],
+            $dados['email'],
+            $dados['site'] ?: null,
+            $dados['linkedin'] ?: null,
+            $dados['sobre'],
+            $dados['funcionarios'] ?: null,
+            $dados['fundacao'] ?: null,
+            $logradouro,
+            $numero,
+            $complemento,
+            $bairro,
+            $dados['cep'] ?: null,
+            $cidadeId,
+            $logoPath ?: null
+        ]
+    );
+
+    // Inserir/associar telefone
+    $numeroTelefone = preg_replace('/[^0-9+]/', '', $dados['telefone']);
+    $telefoneId = null;
+    if (!empty($numeroTelefone)) {
+        try {
+            $rsTel = $db->dbSelect("SELECT telefone_id FROM telefone WHERE numero = ? LIMIT 1", [$numeroTelefone]);
+            $telRow = $db->dbBuscaArray($rsTel);
+            if ($telRow) {
+                $telefoneId = (int)$telRow['telefone_id'];
+            } else {
+                $telefoneId = (int)$db->dbInsert("INSERT INTO telefone (numero, tipo) VALUES (?, ?)", [$numeroTelefone, 'mobile']);
+            }
+            // Vincular à empresa
+            $db->dbInsert("INSERT IGNORE INTO empresa_telefone (empresa_id, telefone_id, principal) VALUES (?, ?, 1)", [$empresaId, $telefoneId]);
+        } catch (\Exception $e) {
+            error_log('Erro ao salvar telefone: ' . $e->getMessage());
+        }
+    }
+
+    Helper::jsonSuccess('Empresa cadastrada com sucesso!', [
+        'empresa_id' => $empresaId
+    ]);
     
 } catch (\Exception $e) {
     Helper::jsonError('Erro ao salvar: ' . $e->getMessage());
