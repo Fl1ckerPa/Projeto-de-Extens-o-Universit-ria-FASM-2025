@@ -1,474 +1,392 @@
--- MySQL Workbench Forward Engineering
+-- ============================================================
+-- Script SQL Corrigido - Descubra Muriaé
+-- Estrutura Normalizada Compatível com Backend PHP
+-- ============================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema mydb
--- -----------------------------------------------------
--- -----------------------------------------------------
 -- Schema descubra_muriae
 -- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `descubra_muriae` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `descubra_muriae`;
 
 -- -----------------------------------------------------
--- Schema descubra_muriae
+-- Table `cidade`
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `descubra_muriae` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
-USE `descubra_muriae` ;
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`estabelecimento`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`estabelecimento` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`estabelecimento` (
-  `estabelecimento_id` INT NOT NULL AUTO_INCREMENT,
-  `nome` VARCHAR(50) NOT NULL,
-  `endereco` VARCHAR(200) NULL DEFAULT NULL,
-  `latitude` CHAR(12) NOT NULL,
-  `longitude` CHAR(12) NOT NULL,
-  `email` VARCHAR(150) NULL DEFAULT NULL,
-  PRIMARY KEY (`estabelecimento_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1202
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE FULLTEXT INDEX `ft_busca` ON `descubra_muriae`.`estabelecimento` (`nome`) VISIBLE;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`categoria_estabelecimento`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`categoria_estabelecimento` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`categoria_estabelecimento` (
-  `categoria_estabelecimento_id` INT NOT NULL AUTO_INCREMENT,
-  `estabelecimento_id` INT NOT NULL,
-  `categoria_id` INT NOT NULL,
-  PRIMARY KEY (`categoria_estabelecimento_id`),
-  CONSTRAINT `fk_estabelecimento_categoria`
-    FOREIGN KEY (`estabelecimento_id`)
-    REFERENCES `descubra_muriae`.`estabelecimento` (`estabelecimento_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1249
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE INDEX `idx_categoria_estabelecimento` ON `descubra_muriae`.`categoria_estabelecimento` (`estabelecimento_id` ASC, `categoria_id` ASC) VISIBLE;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`cidade`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`cidade` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`cidade` (
+DROP TABLE IF EXISTS `cidade`;
+CREATE TABLE IF NOT EXISTS `cidade` (
   `cidade_id` INT NOT NULL AUTO_INCREMENT,
   `cidade` VARCHAR(200) NOT NULL,
   `uf` CHAR(2) NOT NULL,
-  PRIMARY KEY (`cidade_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 5565
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
+  PRIMARY KEY (`cidade_id`),
+  UNIQUE KEY `uk_cidade_uf` (`cidade`, `uf`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`pessoa_fisica`
+-- Table `usuario_tipo`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`pessoa_fisica` ;
+DROP TABLE IF EXISTS `usuario_tipo`;
+CREATE TABLE IF NOT EXISTS `usuario_tipo` (
+  `usuario_tipo_id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(10) NOT NULL,
+  `descricao` VARCHAR(60) NOT NULL,
+  PRIMARY KEY (`usuario_tipo_id`),
+  UNIQUE KEY `uk_usuario_tipo_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`pessoa_fisica` (
-  `pessoa_fisica_id` INT NOT NULL AUTO_INCREMENT,
+-- -----------------------------------------------------
+-- Table `pessoa`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `pessoa`;
+CREATE TABLE IF NOT EXISTS `pessoa` (
+  `pessoa_id` INT NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(150) NOT NULL,
   `cpf` CHAR(11) NULL DEFAULT NULL,
-  `visitante_id` INT NULL DEFAULT NULL,
-  PRIMARY KEY (`pessoa_fisica_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1252
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
+  `email` VARCHAR(255) NULL DEFAULT NULL,
+  `nascimento` DATE NULL DEFAULT NULL,
+  `sexo` CHAR(1) NULL DEFAULT NULL COMMENT 'M=Masculino;F=Feminino;O=Outro',
+  `ativo` TINYINT(1) NOT NULL DEFAULT 1,
+  `data_cadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_atualizacao` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`pessoa_id`),
+  UNIQUE KEY `uk_pessoa_cpf` (`cpf`),
+  UNIQUE KEY `uk_pessoa_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`usuario`
+-- Table `usuario`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`usuario` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`usuario` (
+DROP TABLE IF EXISTS `usuario`;
+CREATE TABLE IF NOT EXISTS `usuario` (
   `usuario_id` INT NOT NULL AUTO_INCREMENT,
-  `pessoa_fisica_id` INT NOT NULL,
-  `login` VARCHAR(50) NULL DEFAULT NULL,
-  `senha` VARCHAR(50) NULL DEFAULT NULL,
-  `tipo` CHAR(2) NOT NULL COMMENT 'A = Anunciante, G = Gestor, CN = Contribuinte normativo',
+  `pessoa_id` INT NOT NULL,
+  `login` VARCHAR(80) NOT NULL,
+  `senha_hash` VARCHAR(255) NOT NULL,
+  `usuario_tipo_id` TINYINT UNSIGNED NOT NULL,
+  `ativo` TINYINT(1) NOT NULL DEFAULT 1,
+  `data_cadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_atualizacao` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`usuario_id`),
-  CONSTRAINT `fk_pessoa_fisica_usuario1`
-    FOREIGN KEY (`pessoa_fisica_id`)
-    REFERENCES `descubra_muriae`.`pessoa_fisica` (`pessoa_fisica_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 1234
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE INDEX `fk_pessoa_fisica_usuario1_idx` ON `descubra_muriae`.`usuario` (`pessoa_fisica_id` ASC) VISIBLE;
-
+  UNIQUE KEY `uk_usuario_login` (`login`),
+  KEY `idx_usuario_pessoa` (`pessoa_id`),
+  KEY `idx_usuario_tipo` (`usuario_tipo_id`),
+  CONSTRAINT `fk_usuario_pessoa` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`pessoa_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_usuario_tipo` FOREIGN KEY (`usuario_tipo_id`) REFERENCES `usuario_tipo` (`usuario_tipo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`telefone`
+-- Table `empresa`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`telefone` ;
+DROP TABLE IF EXISTS `empresa`;
+CREATE TABLE IF NOT EXISTS `empresa` (
+  `empresa_id` INT NOT NULL AUTO_INCREMENT,
+  `cnpj` VARCHAR(14) NOT NULL,
+  `nome_social` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NULL,
+  `site` VARCHAR(500) NULL,
+  `linkedin` VARCHAR(500) NULL,
+  `sobre` TEXT NULL,
+  `funcionarios` VARCHAR(50) NULL,
+  `fundacao` YEAR NULL,
+  `logradouro` VARCHAR(255) NULL,
+  `numero` VARCHAR(20) NULL,
+  `complemento` VARCHAR(100) NULL,
+  `bairro` VARCHAR(100) NULL,
+  `cep` VARCHAR(8) NULL,
+  `cidade_id` INT NULL,
+  `logo` VARCHAR(500) NULL,
+  `ativo` TINYINT(1) NOT NULL DEFAULT 1,
+  `data_cadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_atualizacao` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`empresa_id`),
+  UNIQUE KEY `uk_empresa_cnpj` (`cnpj`),
+  KEY `idx_empresa_cidade` (`cidade_id`),
+  CONSTRAINT `fk_empresa_cidade` FOREIGN KEY (`cidade_id`) REFERENCES `cidade` (`cidade_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`telefone` (
+-- -----------------------------------------------------
+-- Table `telefone`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `telefone`;
+CREATE TABLE IF NOT EXISTS `telefone` (
   `telefone_id` INT NOT NULL AUTO_INCREMENT,
-  `estabelecimento_id` INT NULL DEFAULT NULL,
-  `usuario_id` INT NULL DEFAULT NULL,
-  `numero` CHAR(11) NOT NULL,
-  `tipo` ENUM('m', 'f') NOT NULL,
+  `numero` VARCHAR(20) NOT NULL,
+  `tipo` ENUM('mobile', 'f', 'm') NOT NULL DEFAULT 'mobile' COMMENT 'mobile=celular;f=fixo;m=móvel',
   PRIMARY KEY (`telefone_id`),
-  CONSTRAINT `fk_estabelecimento_telefone`
-    FOREIGN KEY (`estabelecimento_id`)
-    REFERENCES `descubra_muriae`.`estabelecimento` (`estabelecimento_id`),
-  CONSTRAINT `fk_usuario_telefone`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `descubra_muriae`.`usuario` (`usuario_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 2428
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE INDEX `fk_estabelecimento_telefone` ON `descubra_muriae`.`telefone` (`estabelecimento_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_usuario_telefone_idx` ON `descubra_muriae`.`telefone` (`usuario_id` ASC) VISIBLE;
-
+  KEY `idx_telefone_numero` (`numero`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`clique_celular`
+-- Table `empresa_telefone`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`clique_celular` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`clique_celular` (
-  `clique_celular_id` INT NOT NULL AUTO_INCREMENT,
-  `estabelecimento_id` INT NOT NULL,
-  `visitante_id` INT NOT NULL,
-  `celular` CHAR(11) NOT NULL,
-  `telefone_id` INT NULL DEFAULT NULL,
-  `data_clique` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`clique_celular_id`),
-  CONSTRAINT `fk_estabelecimento_clique_celular`
-    FOREIGN KEY (`estabelecimento_id`)
-    REFERENCES `descubra_muriae`.`estabelecimento` (`estabelecimento_id`),
-  CONSTRAINT `fk_telefone_clique_celular`
-    FOREIGN KEY (`telefone_id`)
-    REFERENCES `descubra_muriae`.`telefone` (`telefone_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 32
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE INDEX `fk_estabelecimento_clique_celular_idx` ON `descubra_muriae`.`clique_celular` (`estabelecimento_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_telefone_clique_celular_idx` ON `descubra_muriae`.`clique_celular` (`telefone_id` ASC) VISIBLE;
-
+DROP TABLE IF EXISTS `empresa_telefone`;
+CREATE TABLE IF NOT EXISTS `empresa_telefone` (
+  `empresa_telefone_id` INT NOT NULL AUTO_INCREMENT,
+  `empresa_id` INT NOT NULL,
+  `telefone_id` INT NOT NULL,
+  `principal` TINYINT(1) DEFAULT 0,
+  PRIMARY KEY (`empresa_telefone_id`),
+  KEY `idx_empresa_telefone_empresa` (`empresa_id`),
+  KEY `idx_empresa_telefone_telefone` (`telefone_id`),
+  CONSTRAINT `fk_empresa_telefone_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresa` (`empresa_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_empresa_telefone_telefone` FOREIGN KEY (`telefone_id`) REFERENCES `telefone` (`telefone_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`clique_telefone`
+-- Table `curriculo`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`clique_telefone` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`clique_telefone` (
-  `clique_telefone_id` INT NOT NULL AUTO_INCREMENT,
-  `estabelecimento_id` INT NOT NULL,
-  `visitante_id` INT NOT NULL,
-  `telefone` CHAR(11) NOT NULL,
-  `telefone_id` INT NULL DEFAULT NULL,
-  `data_clique` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`clique_telefone_id`),
-  CONSTRAINT `fk_estabelecimento_clique_telefone`
-    FOREIGN KEY (`estabelecimento_id`)
-    REFERENCES `descubra_muriae`.`estabelecimento` (`estabelecimento_id`),
-  CONSTRAINT `fk_telefone_clique_telefone`
-    FOREIGN KEY (`telefone_id`)
-    REFERENCES `descubra_muriae`.`telefone` (`telefone_id`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 15
-DEFAULT CHARACTER SET = utf8mb4
-COLLATE = utf8mb4_0900_ai_ci;
-
-CREATE INDEX `fk_estabelecimento_clique_telefone_idx` ON `descubra_muriae`.`clique_telefone` (`estabelecimento_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_telefone_clique_telefone_idx` ON `descubra_muriae`.`clique_telefone` (`telefone_id` ASC) VISIBLE;
-
+DROP TABLE IF EXISTS `curriculo`;
+CREATE TABLE IF NOT EXISTS `curriculo` (
+  `curriculo_id` INT NOT NULL AUTO_INCREMENT,
+  `pessoa_id` INT NOT NULL,
+  `nome` VARCHAR(160) NOT NULL,
+  `endereco` VARCHAR(255) NOT NULL,
+  `telefone` VARCHAR(32) NOT NULL,
+  `email` VARCHAR(160) NOT NULL,
+  `genero` VARCHAR(20) NOT NULL,
+  `estado_civil` VARCHAR(20) NULL,
+  `nascimento` DATE NOT NULL,
+  `escolaridade` VARCHAR(100) NOT NULL,
+  `outros_cursos` TEXT NULL,
+  `foto` VARCHAR(255) NULL,
+  `certificado` VARCHAR(255) NULL,
+  `curriculo` VARCHAR(255) NULL COMMENT 'Arquivo PDF/DOC do currículo',
+  `experiencias` JSON NULL,
+  `data_cadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_atualizacao` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`curriculo_id`),
+  KEY `idx_curriculo_pessoa` (`pessoa_id`),
+  CONSTRAINT `fk_curriculo_pessoa` FOREIGN KEY (`pessoa_id`) REFERENCES `pessoa` (`pessoa_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`curriculum`
+-- Table `cargo`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`curriculum` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`curriculum` (
-  `curriculum_id` INT NOT NULL AUTO_INCREMENT,
-  `pessoa_fisica_id` INT NOT NULL,
-  `logradouro` VARCHAR(60) NOT NULL,
-  `numero` VARCHAR(10) NULL,
-  `complemento` VARCHAR(20) NULL,
-  `bairro` VARCHAR(50) NOT NULL,
-  `cep` VARCHAR(8) NOT NULL,
-  `cidade_id` INT NOT NULL,
-  `celular` VARCHAR(11) NOT NULL,
-  `dataNascimento` DATE NOT NULL,
-  `sexo` CHAR(1) NOT NULL COMMENT 'M=Masculino;F=Feminino',
-  `foto` VARCHAR(100) NULL,
-  `email` VARCHAR(120) NOT NULL,
-  `apresentacaoPessoal` TEXT NULL,
-  PRIMARY KEY (`curriculum_id`),
-  CONSTRAINT `fk_curriculum_cidade1`
-    FOREIGN KEY (`cidade_id`)
-    REFERENCES `descubra_muriae`.`cidade` (`cidade_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_curriculum_pessoa_fisica1`
-    FOREIGN KEY (`pessoa_fisica_id`)
-    REFERENCES `descubra_muriae`.`pessoa_fisica` (`pessoa_fisica_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_curriculum_cidade1_idx` ON `descubra_muriae`.`curriculum` (`cidade_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_curriculum_pessoa_fisica1_idx` ON `descubra_muriae`.`curriculum` (`pessoa_fisica_id` ASC) VISIBLE;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`escolaridade`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`escolaridade` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`escolaridade` (
-  `escolaridade_id` INT NOT NULL AUTO_INCREMENT,
-  `descricao` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`escolaridade_id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`curriculum_escolaridade`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`curriculum_escolaridade` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`curriculum_escolaridade` (
-  `curriculum_escolaridade_id` INT NOT NULL AUTO_INCREMENT,
-  `curriculum_curriculum_id` INT NOT NULL,
-  `inicioMes` INT NOT NULL,
-  `inicioAno` INT NOT NULL,
-  `fimMes` INT NOT NULL,
-  `fimAno` INT NOT NULL,
-  `descricao` VARCHAR(60) NOT NULL,
-  `instituicao` VARCHAR(60) NOT NULL,
-  `cidade_id` INT NOT NULL,
-  `escolaridade_id` INT NOT NULL,
-  PRIMARY KEY (`curriculum_escolaridade_id`),
-  CONSTRAINT `fk_curriculum_escolaridade_cidade1`
-    FOREIGN KEY (`cidade_id`)
-    REFERENCES `descubra_muriae`.`cidade` (`cidade_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_curriculum_escolaridade_curriculum1`
-    FOREIGN KEY (`curriculum_curriculum_id`)
-    REFERENCES `descubra_muriae`.`curriculum` (`curriculum_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_curriculum_escolaridade_escolaridade1`
-    FOREIGN KEY (`escolaridade_id`)
-    REFERENCES `descubra_muriae`.`escolaridade` (`escolaridade_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_curriculum_escolaridade_cidade1_idx` ON `descubra_muriae`.`curriculum_escolaridade` (`cidade_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_curriculum_escolaridade_curriculum1_idx` ON `descubra_muriae`.`curriculum_escolaridade` (`curriculum_curriculum_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_curriculum_escolaridade_escolaridade1_idx` ON `descubra_muriae`.`curriculum_escolaridade` (`escolaridade_id` ASC) VISIBLE;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`cargo`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`cargo` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`cargo` (
+DROP TABLE IF EXISTS `cargo`;
+CREATE TABLE IF NOT EXISTS `cargo` (
   `cargo_id` INT NOT NULL AUTO_INCREMENT,
   `descricao` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`cargo_id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `descubra_muriae`.`curriculum_experiencia`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`curriculum_experiencia` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`curriculum_experiencia` (
-  `curriculum_experiencia_id` INT NOT NULL AUTO_INCREMENT,
-  `curriculum_id` INT NOT NULL,
-  `inicioMes` INT NOT NULL,
-  `inicioAno` INT NOT NULL,
-  `fimMes` INT NULL,
-  `fimAno` INT NULL,
-  `estabelecimento` VARCHAR(60) NULL,
-  `cargo_id` INT NULL,
-  `cargoDescricao` VARCHAR(50) NULL,
-  `atividadesExercidas` TEXT NULL,
-  PRIMARY KEY (`curriculum_experiencia_id`),
-  CONSTRAINT `fk_curriculum_experiencia_curriculum1`
-    FOREIGN KEY (`curriculum_id`)
-    REFERENCES `descubra_muriae`.`curriculum` (`curriculum_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_curriculum_experiencia_cargo1`
-    FOREIGN KEY (`cargo_id`)
-    REFERENCES `descubra_muriae`.`cargo` (`cargo_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_curriculum_experiencia_curriculum1_idx` ON `descubra_muriae`.`curriculum_experiencia` (`curriculum_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_curriculum_experiencia_cargo1_idx` ON `descubra_muriae`.`curriculum_experiencia` (`cargo_id` ASC) VISIBLE;
-
+  PRIMARY KEY (`cargo_id`),
+  UNIQUE KEY `uk_cargo_descricao` (`descricao`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`curriculum_qualificacao`
+-- Table `modalidade_trabalho`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`curriculum_qualificacao` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`curriculum_qualificacao` (
-  `curriculum_qualificacao_id` INT NOT NULL AUTO_INCREMENT,
-  `curriculum_id` INT NOT NULL,
-  `mes` INT NOT NULL,
-  `ano` INT NOT NULL,
-  `cargaHoraria` INT NOT NULL,
-  `descricao` VARCHAR(60) NOT NULL,
-  `estabelecimento` VARCHAR(60) NOT NULL,
-  PRIMARY KEY (`curriculum_qualificacao_id`),
-  CONSTRAINT `fk_curriculum_qualificacao_curriculum1`
-    FOREIGN KEY (`curriculum_id`)
-    REFERENCES `descubra_muriae`.`curriculum` (`curriculum_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_curriculum_qualificacao_curriculum1_idx` ON `descubra_muriae`.`curriculum_qualificacao` (`curriculum_id` ASC) VISIBLE;
-
+DROP TABLE IF EXISTS `modalidade_trabalho`;
+CREATE TABLE IF NOT EXISTS `modalidade_trabalho` (
+  `modalidade_trabalho_id` INT NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(20) NOT NULL,
+  `descricao` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`modalidade_trabalho_id`),
+  UNIQUE KEY `uk_modalidade_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`vaga`
+-- Table `vinculo_contratual`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`vaga` ;
+DROP TABLE IF EXISTS `vinculo_contratual`;
+CREATE TABLE IF NOT EXISTS `vinculo_contratual` (
+  `vinculo_contratual_id` INT NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(20) NOT NULL,
+  `descricao` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`vinculo_contratual_id`),
+  UNIQUE KEY `uk_vinculo_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`vaga` (
+-- -----------------------------------------------------
+-- Table `status_vaga`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `status_vaga`;
+CREATE TABLE IF NOT EXISTS `status_vaga` (
+  `status_vaga_id` INT NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(20) NOT NULL,
+  `descricao` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`status_vaga_id`),
+  UNIQUE KEY `uk_status_vaga_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `categoria_vaga`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `categoria_vaga`;
+CREATE TABLE IF NOT EXISTS `categoria_vaga` (
+  `categoria_vaga_id` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(100) NOT NULL,
+  `descricao` TEXT NULL,
+  PRIMARY KEY (`categoria_vaga_id`),
+  UNIQUE KEY `uk_categoria_vaga_nome` (`nome`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `vaga`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `vaga`;
+CREATE TABLE IF NOT EXISTS `vaga` (
   `vaga_id` INT NOT NULL AUTO_INCREMENT,
-  `cargo_id` INT NOT NULL,
-  `descricao` VARCHAR(60) NOT NULL,
-  `sobreaVaga` TEXT NOT NULL,
-  `modalidade` INT NOT NULL COMMENT '1=Presencial; 2=Remoto;',
-  `vinculo` INT NOT NULL COMMENT '1=CLT; 2=Pessoa Jurídica;',
-  `dtInicio` DATE NOT NULL,
-  `dtFim` DATE NOT NULL,
-  `estabelecimento_id` INT NOT NULL,
-  `statusVaga` INT NOT NULL COMMENT '1=Pré Vaga; 11=Em aberto;91=Suspensa; 99=Finalizada;',
+  `empresa_id` INT NOT NULL,
+  `cargo_id` INT NULL,
+  `categoria_vaga_id` INT NULL,
+  `titulo` VARCHAR(255) NOT NULL,
+  `descricao` TEXT NOT NULL,
+  `modalidade_trabalho_id` INT NOT NULL,
+  `vinculo_contratual_id` INT NOT NULL,
+  `status_vaga_id` INT NOT NULL,
+  `dt_inicio` DATE NOT NULL,
+  `dt_fim` DATE NOT NULL,
+  `salario` VARCHAR(100) NULL,
+  `requisitos` TEXT NULL,
+  `beneficios` TEXT NULL,
+  `data_cadastro` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_atualizacao` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`vaga_id`),
-  CONSTRAINT `fk_vaga_cargo1`
-    FOREIGN KEY (`cargo_id`)
-    REFERENCES `descubra_muriae`.`cargo` (`cargo_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_vaga_estabelecimento1`
-    FOREIGN KEY (`estabelecimento_id`)
-    REFERENCES `descubra_muriae`.`estabelecimento` (`estabelecimento_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_vaga_cargo1_idx` ON `descubra_muriae`.`vaga` (`cargo_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_vaga_estabelecimento1_idx` ON `descubra_muriae`.`vaga` (`estabelecimento_id` ASC) VISIBLE;
-
+  KEY `idx_vaga_empresa` (`empresa_id`),
+  KEY `idx_vaga_cargo` (`cargo_id`),
+  KEY `idx_vaga_categoria` (`categoria_vaga_id`),
+  KEY `idx_vaga_modalidade` (`modalidade_trabalho_id`),
+  KEY `idx_vaga_vinculo` (`vinculo_contratual_id`),
+  KEY `idx_vaga_status` (`status_vaga_id`),
+  KEY `idx_vaga_dt_fim` (`dt_fim`),
+  CONSTRAINT `fk_vaga_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresa` (`empresa_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_vaga_cargo` FOREIGN KEY (`cargo_id`) REFERENCES `cargo` (`cargo_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_vaga_categoria` FOREIGN KEY (`categoria_vaga_id`) REFERENCES `categoria_vaga` (`categoria_vaga_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_vaga_modalidade` FOREIGN KEY (`modalidade_trabalho_id`) REFERENCES `modalidade_trabalho` (`modalidade_trabalho_id`),
+  CONSTRAINT `fk_vaga_vinculo` FOREIGN KEY (`vinculo_contratual_id`) REFERENCES `vinculo_contratual` (`vinculo_contratual_id`),
+  CONSTRAINT `fk_vaga_status` FOREIGN KEY (`status_vaga_id`) REFERENCES `status_vaga` (`status_vaga_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`vaga_curriculum`
+-- Table `status_candidatura`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`vaga_curriculum` ;
+DROP TABLE IF EXISTS `status_candidatura`;
+CREATE TABLE IF NOT EXISTS `status_candidatura` (
+  `status_candidatura_id` INT NOT NULL AUTO_INCREMENT,
+  `codigo` VARCHAR(20) NOT NULL,
+  `descricao` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`status_candidatura_id`),
+  UNIQUE KEY `uk_status_candidatura_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`vaga_curriculum` (
+-- -----------------------------------------------------
+-- Table `candidatura`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `candidatura`;
+CREATE TABLE IF NOT EXISTS `candidatura` (
+  `candidatura_id` INT NOT NULL AUTO_INCREMENT,
   `vaga_id` INT NOT NULL,
-  `curriculum_id` INT NOT NULL,
-  `dateCandidatura` DATETIME NOT NULL,
-  PRIMARY KEY (`vaga_id`, `curriculum_id`),
-  CONSTRAINT `fk_vaga_has_curriculum_vaga1`
-    FOREIGN KEY (`vaga_id`)
-    REFERENCES `descubra_muriae`.`vaga` (`vaga_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_vaga_has_curriculum_curriculum1`
-    FOREIGN KEY (`curriculum_id`)
-    REFERENCES `descubra_muriae`.`curriculum` (`curriculum_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-CREATE INDEX `fk_vaga_has_curriculum_curriculum1_idx` ON `descubra_muriae`.`vaga_curriculum` (`curriculum_id` ASC) VISIBLE;
-
-CREATE INDEX `fk_vaga_has_curriculum_vaga1_idx` ON `descubra_muriae`.`vaga_curriculum` (`vaga_id` ASC) VISIBLE;
-
+  `curriculo_id` INT NOT NULL,
+  `status_candidatura_id` INT NOT NULL,
+  `data_candidatura` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_avaliacao` TIMESTAMP NULL,
+  `observacoes` TEXT NULL,
+  PRIMARY KEY (`candidatura_id`),
+  KEY `idx_candidatura_vaga` (`vaga_id`),
+  KEY `idx_candidatura_curriculo` (`curriculo_id`),
+  KEY `idx_candidatura_status` (`status_candidatura_id`),
+  UNIQUE KEY `uk_candidatura_vaga_curriculo` (`vaga_id`, `curriculo_id`),
+  CONSTRAINT `fk_candidatura_vaga` FOREIGN KEY (`vaga_id`) REFERENCES `vaga` (`vaga_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_candidatura_curriculo` FOREIGN KEY (`curriculo_id`) REFERENCES `curriculo` (`curriculo_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_candidatura_status` FOREIGN KEY (`status_candidatura_id`) REFERENCES `status_candidatura` (`status_candidatura_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`termodeuso`
+-- Table `administradores`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`termodeuso` ;
-
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`termodeuso` ( 
+DROP TABLE IF EXISTS `administradores`;
+CREATE TABLE IF NOT EXISTS `administradores` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `textoTermo` LONGTEXT NOT NULL,
-  `statusRegistro` INT NOT NULL DEFAULT 1 COMMENT '1=Ativo;2=Inativo;3=Alterado',
-  `rascunho` INT NULL DEFAULT 1 COMMENT '1=Sim; 2=Não',
-  `usuario_id` INT NOT NULL,
+  `nome` VARCHAR(160) NOT NULL,
+  `email` VARCHAR(160) NOT NULL,
+  `senha` VARCHAR(255) NOT NULL,
+  `ativo` TINYINT(1) DEFAULT 1,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_termodeuso_usuario1`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `descubra_muriae`.`usuario` (`usuario_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION
-)ENGINE = InnoDB;
-
+  UNIQUE KEY `uk_admin_email` (`email`),
+  KEY `idx_admin_ativo` (`ativo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `descubra_muriae`.`termodeusoaceite`
+-- Table `reset_tokens`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `descubra_muriae`.`termodeusoaceite` ;
+DROP TABLE IF EXISTS `reset_tokens`;
+CREATE TABLE IF NOT EXISTS `reset_tokens` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(160) NOT NULL,
+  `token` VARCHAR(64) NOT NULL,
+  `tipo_usuario` ENUM('pf', 'pj') NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `used` TINYINT(1) DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_reset_token` (`token`),
+  KEY `idx_reset_email` (`email`),
+  KEY `idx_reset_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS `descubra_muriae`.`termodeusoaceite` (
-  `termodeuso_id` INT NOT NULL,
-  `usuario_id` INT NOT NULL,
-  `dataHoraAceite` DATETIME NOT NULL,
-  PRIMARY KEY (`termodeuso_id`, `usuario_id`),
-  CONSTRAINT `fk_termodeuso_has_usuario_termodeuso1`
-    FOREIGN KEY (`termodeuso_id`)
-    REFERENCES `descubra_muriae`.`termodeuso` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_termodeuso_has_usuario_usuario1`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `descubra_muriae`.`usuario` (`usuario_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+-- -----------------------------------------------------
+-- INSERTS - Dados Iniciais
+-- -----------------------------------------------------
 
-CREATE INDEX `fk_termodeuso_has_usuario_usuario1_idx` ON `descubra_muriae`.`termodeusoaceite` (`usuario_id` ASC) VISIBLE;
+-- Usuario Tipo
+INSERT INTO `usuario_tipo` (`codigo`, `descricao`) VALUES
+('ANUNC', 'Anunciante'),
+('GEST', 'Gestor'),
+('CONT', 'Contribuinte Normativo'),
+('ADMIN', 'Administrador')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
 
-CREATE INDEX `fk_termodeuso_has_usuario_termodeuso1_idx` ON `descubra_muriae`.`termodeusoaceite` (`termodeuso_id` ASC) VISIBLE;
+-- Modalidade Trabalho
+INSERT INTO `modalidade_trabalho` (`codigo`, `descricao`) VALUES
+('PRESENCIAL', 'Presencial'),
+('REMOTO', 'Remoto'),
+('HIBRIDO', 'Híbrido')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
 
+-- Vinculo Contratual
+INSERT INTO `vinculo_contratual` (`codigo`, `descricao`) VALUES
+('CLT', 'CLT'),
+('PJ', 'Pessoa Jurídica'),
+('ESTAGIO', 'Estágio'),
+('TEMPORARIO', 'Temporário')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
+
+-- Status Vaga
+INSERT INTO `status_vaga` (`codigo`, `descricao`) VALUES
+('RASCUNHO', 'Rascunho'),
+('ABERTA', 'Aberta'),
+('PAUSADA', 'Pausada'),
+('FECHADA', 'Fechada')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
+
+-- Categoria Vaga
+INSERT INTO `categoria_vaga` (`nome`, `descricao`) VALUES
+('tecnologia', 'Tecnologia da Informação'),
+('administracao', 'Administração'),
+('comercio', 'Comércio'),
+('saude', 'Saúde'),
+('educacao', 'Educação'),
+('engenharia', 'Engenharia'),
+('agronegocio', 'Agronegócio'),
+('servicos', 'Serviços'),
+('outros', 'Outros')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
+
+-- Status Candidatura
+INSERT INTO `status_candidatura` (`codigo`, `descricao`) VALUES
+('PENDENTE', 'Pendente'),
+('EM_ANALISE', 'Em Análise'),
+('APROVADA', 'Aprovada'),
+('REJEITADA', 'Rejeitada')
+ON DUPLICATE KEY UPDATE `descricao` = VALUES(`descricao`);
+
+-- Cidade (Muriaé)
+INSERT INTO `cidade` (`cidade`, `uf`) VALUES
+('Muriaé', 'MG')
+ON DUPLICATE KEY UPDATE `cidade` = VALUES(`cidade`);
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

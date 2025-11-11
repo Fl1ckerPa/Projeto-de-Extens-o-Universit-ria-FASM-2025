@@ -1,148 +1,112 @@
 <?php
+/**
+ * Script de Migração - Descubra Muriaé
+ * Garante que o schema normalizado esteja criado e popula dados iniciais
+ */
+
 require_once __DIR__ . '/../lib/bootstrap.php';
 
 $db = new Database();
+$pdo = $db->connect();
 
 try {
-    // Criar tabela usuarios_pf (Pessoa Física)
-    $db->dbUpdate("CREATE TABLE IF NOT EXISTS usuarios_pf (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(120) NOT NULL,
-        cpf VARCHAR(14) NOT NULL UNIQUE,
-        senha VARCHAR(255) NOT NULL,
-        email VARCHAR(160) NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    // Garantir que o schema normalizado esteja criado
+    Schema::ensureNormalizedSchema($pdo);
+    
+    echo "✓ Schema normalizado verificado/criado\n";
 
-    // Criar tabela usuarios_pj (Pessoa Jurídica)
-    $db->dbUpdate("CREATE TABLE IF NOT EXISTS usuarios_pj (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(160) NOT NULL,
-        cnpj VARCHAR(18) NOT NULL UNIQUE,
-        senha VARCHAR(255) NOT NULL,
-        email VARCHAR(160) NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-    // Criar tabela curriculos
-    $db->dbUpdate("CREATE TABLE IF NOT EXISTS curriculos (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(160) NOT NULL,
-        endereco VARCHAR(255) NOT NULL,
-        telefone VARCHAR(32) NOT NULL,
-        email VARCHAR(160) NOT NULL,
-        genero VARCHAR(20) NOT NULL,
-        estado_civil VARCHAR(20) NULL,
-        nascimento DATE NOT NULL,
-        escolaridade VARCHAR(100) NOT NULL,
-        outros_cursos TEXT NULL,
-        foto VARCHAR(255) NULL,
-        certificado VARCHAR(255) NULL,
-        curriculo VARCHAR(255) NULL,
-        experiencias JSON NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-    // Criar tabela administradores
-    $db->dbUpdate("CREATE TABLE IF NOT EXISTS administradores (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nome VARCHAR(160) NOT NULL,
-        email VARCHAR(160) NOT NULL UNIQUE,
-        senha VARCHAR(255) NOT NULL,
-        ativo TINYINT(1) DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_email (email),
-        INDEX idx_ativo (ativo)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-    // Criar tabela para tokens de reset de senha
-    $db->dbUpdate("CREATE TABLE IF NOT EXISTS reset_tokens (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(160) NOT NULL,
-        token VARCHAR(64) NOT NULL UNIQUE,
-        tipo_usuario ENUM('pf', 'pj') NOT NULL,
-        expires_at DATETIME NOT NULL,
-        used TINYINT(1) DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_token (token),
-        INDEX idx_email (email),
-        INDEX idx_expires (expires_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-    // Limpar TODOS os dados antigos de teste
+    // Limpar dados antigos de teste (usando schema normalizado)
     try {
-        // Limpar TODOS os usuários de teste (por email)
-        $db->dbUpdate("DELETE FROM usuarios_pf WHERE email LIKE '%@demo.local'");
-        $db->dbUpdate("DELETE FROM usuarios_pj WHERE email LIKE '%@demo.local'");
+        // Limpar pessoas de teste
+        $pdo->exec("DELETE FROM pessoa WHERE email LIKE '%@demo.local' OR email = 'admin@descubramuriae.local'");
+        $pdo->exec("DELETE FROM pessoa WHERE cpf = '11144477735'");
         
-        // Limpar CPF antigo (12345678909 ou 123.456.789-09) - REMOVER COMPLETAMENTE
-        $db->dbUpdate("DELETE FROM usuarios_pf WHERE cpf = '12345678909' OR cpf = '123.456.789-09'");
+        // Limpar empresas de teste
+        $pdo->exec("DELETE FROM empresa WHERE cnpj = '11222333000181'");
         
-        // Limpar CNPJ antigo (12345678000195 ou 12.345.678/0001-95) - REMOVER COMPLETAMENTE
-        $db->dbUpdate("DELETE FROM usuarios_pj WHERE cnpj = '12345678000195' OR cnpj = '12.345.678/0001-95'");
+        // Limpar administradores de teste
+        $pdo->exec("DELETE FROM administradores WHERE email = 'admin@descubramuriae.local'");
         
-        // Garantir que não há outros usuários de teste
-        $db->dbUpdate("DELETE FROM usuarios_pf WHERE nome LIKE '%Demo%' OR nome LIKE '%demo%'");
-        $db->dbUpdate("DELETE FROM usuarios_pj WHERE nome LIKE '%Demo%' OR nome LIKE '%demo%'");
-        
-        echo "✓ Todos os usuários de teste antigos foram removidos\n";
+        echo "✓ Dados antigos de teste removidos\n";
     } catch (\Exception $e) {
-        // Ignora erro se tabelas não existirem
         echo "⚠ Aviso ao limpar dados antigos: " . $e->getMessage() . "\n";
     }
 
-    // Seeds (usuários de teste) - SEMPRE criar novos
+    // Seeds (usuários de teste) - Schema normalizado
     $hash = Helper::hashSenha('Teste@123');
+    $hashAdmin = Helper::hashSenha('Admin@123');
 
-    // PF demo - usando CPF válido: 11144477735 -> 111.444.777-35
+    // PF demo - CPF válido: 111.444.777-35
     $cpfTeste = '11144477735';
     $cpfFormatado = Helper::formatarCPF($cpfTeste);
     
-    // Remover se já existir e criar novo
     try {
-        $db->dbUpdate("DELETE FROM usuarios_pf WHERE cpf = '" . addslashes($cpfFormatado) . "'");
+        $pdo->beginTransaction();
+        
+        // Criar pessoa
+        $stmt = $pdo->prepare("INSERT INTO pessoa (nome, cpf, email, ativo) VALUES (?, ?, ?, 1)");
+        $stmt->execute(['Usuário PF Demo', $cpfTeste, 'pf@demo.local']);
+        $pessoaId = (int)$pdo->lastInsertId();
+        
+        // Obter tipo CONT (Contribuinte Normativo)
+        $stmt = $pdo->prepare("SELECT usuario_tipo_id FROM usuario_tipo WHERE codigo = 'CONT' LIMIT 1");
+        $stmt->execute();
+        $tipoRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $tipoId = $tipoRow ? (int)$tipoRow['usuario_tipo_id'] : 3;
+        
+        // Criar usuário
+        $stmt = $pdo->prepare("INSERT INTO usuario (pessoa_id, login, senha_hash, usuario_tipo_id, ativo) VALUES (?, ?, ?, ?, 1)");
+        $stmt->execute([$pessoaId, 'pf@demo.local', $hash, $tipoId]);
+        
+        $pdo->commit();
+        echo "✓ Usuário PF criado: {$cpfFormatado}\n";
     } catch (\Exception $e) {
-        // Ignora
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        echo "⚠ Erro ao criar PF: " . $e->getMessage() . "\n";
     }
-    
-    $db->dbInsert(
-        "INSERT INTO usuarios_pf (nome, cpf, senha, email) VALUES (?, ?, ?, ?)",
-        ['Usuário PF Demo', $cpfFormatado, $hash, 'pf@demo.local']
-    );
-    echo "✓ Usuário PF criado: {$cpfFormatado}\n";
 
-    // PJ demo - usando CNPJ válido: 11222333000181 -> 11.222.333/0001-81
+    // PJ demo - CNPJ válido: 11.222.333/0001-81
     $cnpjTeste = '11222333000181';
     $cnpjFormatado = Helper::formatarCNPJ($cnpjTeste);
     
-    // Remover se já existir e criar novo
     try {
-        $db->dbUpdate("DELETE FROM usuarios_pj WHERE cnpj = '" . addslashes($cnpjFormatado) . "'");
+        $pdo->beginTransaction();
+        
+        // Criar pessoa para PJ
+        $stmt = $pdo->prepare("INSERT INTO pessoa (nome, email, ativo) VALUES (?, ?, 1)");
+        $stmt->execute(['Empresa PJ Demo', 'pj@demo.local']);
+        $pessoaId = (int)$pdo->lastInsertId();
+        
+        // Obter tipo ANUNC (Anunciante)
+        $stmt = $pdo->prepare("SELECT usuario_tipo_id FROM usuario_tipo WHERE codigo = 'ANUNC' LIMIT 1");
+        $stmt->execute();
+        $tipoRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $tipoId = $tipoRow ? (int)$tipoRow['usuario_tipo_id'] : 1;
+        
+        // Criar usuário
+        $stmt = $pdo->prepare("INSERT INTO usuario (pessoa_id, login, senha_hash, usuario_tipo_id, ativo) VALUES (?, ?, ?, ?, 1)");
+        $stmt->execute([$pessoaId, 'pj@demo.local', $hash, $tipoId]);
+        
+        // Criar empresa
+        $stmt = $pdo->prepare("INSERT INTO empresa (cnpj, nome_social, email, ativo) VALUES (?, ?, ?, 1)");
+        $stmt->execute([$cnpjTeste, 'Empresa PJ Demo', 'pj@demo.local']);
+        
+        $pdo->commit();
+        echo "✓ Usuário PJ criado: {$cnpjFormatado}\n";
     } catch (\Exception $e) {
-        // Ignora
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        echo "⚠ Erro ao criar PJ: " . $e->getMessage() . "\n";
     }
-    
-    $db->dbInsert(
-        "INSERT INTO usuarios_pj (nome, cnpj, senha, email) VALUES (?, ?, ?, ?)",
-        ['Empresa PJ Demo', $cnpjFormatado, $hash, 'pj@demo.local']
-    );
-    echo "✓ Usuário PJ criado: {$cnpjFormatado}\n";
 
     // Admin demo
     $emailAdmin = 'admin@descubramuriae.local';
     try {
-        $db->dbUpdate("DELETE FROM administradores WHERE email = '" . addslashes($emailAdmin) . "'");
+        $stmt = $pdo->prepare("INSERT INTO administradores (nome, email, senha, ativo) VALUES (?, ?, ?, 1)");
+        $stmt->execute(['Administrador Demo', $emailAdmin, $hashAdmin]);
+        echo "✓ Administrador criado: {$emailAdmin}\n";
     } catch (\Exception $e) {
-        // Ignora
+        echo "⚠ Erro ao criar Admin: " . $e->getMessage() . "\n";
     }
-    
-    $hashAdmin = Helper::hashSenha('Admin@123');
-    $db->dbInsert(
-        "INSERT INTO administradores (nome, email, senha, ativo) VALUES (?, ?, ?, ?)",
-        ['Administrador Demo', $emailAdmin, $hashAdmin, 1]
-    );
-    echo "✓ Administrador criado: {$emailAdmin}\n";
 
     echo "\n========================================\n";
     echo "Migração executada com sucesso!\n";
@@ -159,7 +123,8 @@ try {
     echo "  Senha: Admin@123\n\n";
 } catch (Throwable $e) {
     http_response_code(500);
-    echo "Erro ao migrar: " . $e->getMessage();
+    echo "Erro ao migrar: " . $e->getMessage() . "\n";
+    echo "Stack trace: " . $e->getTraceAsString() . "\n";
 }
 
 

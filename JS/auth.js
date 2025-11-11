@@ -17,17 +17,36 @@ class AuthManager {
      */
     async checkAuth() {
         try {
-            const response = await fetch(this.checkEndpoint);
+            const response = await fetch(this.checkEndpoint, {
+                method: 'GET',
+                credentials: 'same-origin', // Incluir cookies da sessão
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             
-            if (data.status === 'success' && data.dados && data.dados.autenticado) {
+            // Debug
+            console.log('Resposta checkAuth:', data);
+            
+            // Verificar se está autenticado
+            if (data.status === 'success' && data.dados && data.dados.autenticado === true) {
                 this.user = data.dados;
                 this.isAuthenticated = true;
+                console.log('Usuário autenticado:', this.user);
                 return this.user;
             } else {
-                this.user = null;
+                // Usuário não autenticado
+                this.user = data.dados || null;
                 this.isAuthenticated = false;
-                return null;
+                console.log('Usuário não autenticado');
+                return this.user; // Retornar dados mesmo se não autenticado (para compatibilidade)
             }
         } catch (error) {
             console.error('Erro ao verificar autenticação:', error);
@@ -44,14 +63,17 @@ class AuthManager {
     async protectPage(requireAuth = true) {
         const user = await this.checkAuth();
         
-        if (requireAuth && !user) {
+        // Verificar se está autenticado (user pode existir mas autenticado = false)
+        const isAuthenticated = user && user.autenticado === true;
+        
+        if (requireAuth && !isAuthenticated) {
             // Redirecionar para login com URL de retorno
             const currentUrl = encodeURIComponent(window.location.href);
             window.location.href = `login.html?redirect=${currentUrl}`;
             return false;
         }
         
-        return user !== null;
+        return isAuthenticated;
     }
 
     /**

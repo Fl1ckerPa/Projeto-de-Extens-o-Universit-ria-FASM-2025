@@ -79,31 +79,53 @@ try {
     Schema::ensureNormalizedSchema($pdo);
 
     if ($tipo === 'pf') {
+        // Login PF: busca por CPF na tabela pessoa
         $stmt = $pdo->prepare('SELECT u.usuario_id, u.senha_hash, p.nome, p.email, p.pessoa_id, ut.codigo AS role_codigo
                                FROM pessoa p
                                INNER JOIN usuario u ON u.pessoa_id = p.pessoa_id
                                INNER JOIN usuario_tipo ut ON ut.usuario_tipo_id = u.usuario_tipo_id
-                               WHERE p.cpf = ?
+                               WHERE p.cpf = ? AND u.ativo = 1 AND p.ativo = 1
                                LIMIT 1');
         $stmt->execute([$cpf]);
         $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
         $empresaId = null;
     } else {
-        $stmt = $pdo->prepare('SELECT empresa_id, email FROM empresa WHERE cnpj = ? LIMIT 1');
+        // Login PJ: busca empresa por CNPJ e depois o usuário associado
+        $stmt = $pdo->prepare('SELECT empresa_id, email, nome_social FROM empresa WHERE cnpj = ? AND ativo = 1 LIMIT 1');
         $stmt->execute([$cnpj]);
         $empresa = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
         if (!$empresa) {
             $usuario = false;
+            $empresaId = null;
         } else {
+            $empresaId = (int)$empresa['empresa_id'];
+            // Buscar usuário pelo email da empresa (login)
             $stmt = $pdo->prepare('SELECT u.usuario_id, u.senha_hash, p.nome, p.email, p.pessoa_id, ut.codigo AS role_codigo
                                    FROM usuario u
                                    INNER JOIN pessoa p ON p.pessoa_id = u.pessoa_id
                                    INNER JOIN usuario_tipo ut ON ut.usuario_tipo_id = u.usuario_tipo_id
-                                   WHERE u.login = ?
+                                   WHERE u.login = ? AND u.ativo = 1 AND p.ativo = 1
                                    LIMIT 1');
             $stmt->execute([$empresa['email']]);
             $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
-            $empresaId = $empresa ? (int)$empresa['empresa_id'] : null;
+            
+            // Se não encontrou usuário, buscar pessoa pelo email e criar usuário se necessário
+            if (!$usuario) {
+                // Buscar pessoa pelo email
+                $stmt = $pdo->prepare('SELECT pessoa_id, nome, email FROM pessoa WHERE email = ? AND ativo = 1 LIMIT 1');
+                $stmt->execute([$empresa['email']]);
+                $pessoa = $stmt->fetch(\PDO::FETCH_ASSOC);
+                
+                if ($pessoa) {
+                    // Buscar senha_hash de algum usuário antigo ou usar hash padrão (não recomendado)
+                    // Por segurança, não permitir login sem usuário válido
+                    $usuario = false;
+                } else {
+                    // Empresa sem pessoa/usuário - não pode fazer login
+                    $usuario = false;
+                }
+            }
         }
     }
 } catch (\Exception $e) {
@@ -135,17 +157,25 @@ if (!Helper::verificarSenha($senha, $usuario['senha_hash'])) {
     exit;
 }
 
+// Garantir que a sessão está iniciada
+Session::startSecure();
+
+// Salvar dados na sessão
 Session::set('user_id', $usuario['usuario_id']);
 Session::set('user_type', $tipo);
 Session::set('user_nome', $usuario['nome']);
 Session::set('user_email', $usuario['email']);
 Session::set('pessoa_id', $usuario['pessoa_id']);
+Session::set('last_activity', time()); // Atualizar última atividade
+
 if (!empty($usuario['role_codigo'])) {
     Session::set('role_code', $usuario['role_codigo']); // e.g., ANUNC, GEST, CONT, ADMIN
 }
 if (isset($empresaId) && $empresaId) {
     Session::set('empresa_id', $empresaId);
 }
+
+// Garantir que a sessão foi salva (PHP salva automaticamente ao final do script)
 
 $redirect = Request::post('redirect', Request::get('redirect', ''));
 if (!empty($redirect)) {

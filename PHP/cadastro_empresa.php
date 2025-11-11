@@ -37,7 +37,7 @@ foreach ($campos as $campo => $label) {
     if (empty($valor)) {
         $erros[] = "$label é obrigatório";
     } else {
-        $dados[$campo] = limpar($valor);
+        $dados[$campo] = Helper::limpar($valor);
     }
 }
 
@@ -56,8 +56,8 @@ if (strlen($dados['sobre']) < 50) {
 
 // Campos opcionais
 $dados['cep'] = preg_replace('/[^0-9]/', '', Request::post('cep', ''));
-$dados['site'] = limpar(Request::post('site', ''));
-$dados['linkedin'] = limpar(Request::post('linkedin', ''));
+$dados['site'] = Helper::limpar(Request::post('site', ''));
+$dados['linkedin'] = Helper::limpar(Request::post('linkedin', ''));
 $dados['funcionarios'] = Request::post('funcionarios', '');
 $dados['fundacao'] = Request::post('fundacao', '');
 

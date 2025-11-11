@@ -16,52 +16,75 @@ $db = new Database();
 
 switch ($acao) {
     case 'visualizar':
-        // Buscar dados do perfil
+        // Buscar dados do perfil usando schema normalizado
         try {
+            $pdo = $db->connect();
+            
+            // Buscar pessoa e usuário
+            $stmt = $pdo->prepare("SELECT p.pessoa_id, p.nome, p.cpf, p.email, p.nascimento, p.sexo, 
+                                          u.login, u.usuario_id, ut.codigo as role_code
+                                   FROM pessoa p
+                                   INNER JOIN usuario u ON u.pessoa_id = p.pessoa_id
+                                   INNER JOIN usuario_tipo ut ON ut.usuario_tipo_id = u.usuario_tipo_id
+                                   WHERE u.usuario_id = ? AND u.ativo = 1 AND p.ativo = 1
+                                   LIMIT 1");
+            $stmt->execute([$userId]);
+            $pessoa = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$pessoa) {
+                Response::error('Usuário não encontrado');
+            }
+            
+            $dadosPerfil = [
+                'nome' => $pessoa['nome'],
+                'email' => $pessoa['email'],
+                'user_nome' => $pessoa['nome'],
+                'user_email' => $pessoa['email'],
+                'cpf' => $pessoa['cpf'],
+                'nascimento' => $pessoa['nascimento'],
+                'sexo' => $pessoa['sexo'],
+                'pessoa_id' => $pessoa['pessoa_id'],
+                'usuario_id' => $pessoa['usuario_id']
+            ];
+            
             if ($userType === 'pf') {
-                $usuario = $db->table('usuarios_pf')
-                    ->where('id', $userId)
-                    ->first();
-                
                 // Buscar currículo se existir
-                $curriculo = $db->table('curriculos')
-                    ->where('email', $usuario['email'] ?? '')
-                    ->first();
+                $stmt = $pdo->prepare("SELECT * FROM curriculo WHERE pessoa_id = ? LIMIT 1");
+                $stmt->execute([$pessoa['pessoa_id']]);
+                $curriculo = $stmt->fetch(\PDO::FETCH_ASSOC);
                 
-                Response::success('Perfil carregado!', [
-                    'usuario' => $usuario,
-                    'curriculo' => $curriculo
-                ]);
-            } elseif ($userType === 'pj') {
-                $usuario = $db->table('usuarios_pj')
-                    ->where('id', $userId)
-                    ->first();
-                
-                // Buscar estabelecimento se existir
-                $sqlEstab = "SELECT * FROM estabelecimento WHERE email = ? LIMIT 1";
-                $resultEstab = $db->dbSelect($sqlEstab, [$usuario['email'] ?? '']);
-                $empresa = $db->dbBuscaArray($resultEstab);
-                
-                // Tentar buscar dados completos da tabela empresas se existir
-                $empresaCompleta = null;
-                try {
-                    $sqlEmpresa = "SELECT * FROM empresas WHERE email = ? LIMIT 1";
-                    $resultEmpresa = $db->dbSelect($sqlEmpresa, [$usuario['email'] ?? '']);
-                    $empresaCompleta = $db->dbBuscaArray($resultEmpresa);
-                } catch (\Exception $e) {
-                    // Tabela empresas pode não existir, usar apenas estabelecimento
+                if ($curriculo) {
+                    // Foto pode estar em curriculo.foto
+                    if (!empty($curriculo['foto'])) {
+                        $dadosPerfil['foto'] = $curriculo['foto'];
+                    }
+                    $dadosPerfil['curriculo'] = $curriculo;
                 }
                 
-                // Usar dados completos se disponível, senão usar estabelecimento
-                $dadosEmpresa = $empresaCompleta ? $empresaCompleta : $empresa;
+                Response::success('Perfil carregado!', $dadosPerfil);
+            } elseif ($userType === 'pj') {
+                // Buscar empresa
+                $empresaId = Session::get('empresa_id');
+                if ($empresaId) {
+                    $stmt = $pdo->prepare("SELECT * FROM empresa WHERE empresa_id = ? LIMIT 1");
+                    $stmt->execute([$empresaId]);
+                    $empresa = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    
+                    if ($empresa) {
+                        $dadosPerfil['empresa'] = $empresa;
+                        $dadosPerfil['nome_social'] = $empresa['nome_social'];
+                        $dadosPerfil['cnpj'] = $empresa['cnpj'];
+                        // Logo pode ser usado como foto também
+                        if (!empty($empresa['logo'])) {
+                            $dadosPerfil['logo'] = $empresa['logo'];
+                            $dadosPerfil['foto'] = $empresa['logo'];
+                        }
+                    }
+                }
                 
-                Response::success('Perfil carregado!', [
-                    'usuario' => $usuario,
-                    'empresa' => $dadosEmpresa,
-                    'tem_empresa' => !empty($dadosEmpresa)
-                ]);
+                Response::success('Perfil carregado!', $dadosPerfil);
             } else {
-                Response::error('Tipo de usuário não reconhecido');
+                Response::success('Perfil carregado!', $dadosPerfil);
             }
         } catch (\Exception $e) {
             Response::error('Erro ao carregar perfil: ' . $e->getMessage());
@@ -69,62 +92,84 @@ switch ($acao) {
         break;
 
     case 'atualizar':
-        // Atualizar dados do perfil
+        // Atualizar dados do perfil usando schema normalizado
         try {
-            $dados = [
-                'nome' => Request::post('nome', ''),
-                'email' => Request::post('email', '')
-            ];
+            $pdo = $db->connect();
+            $pdo->beginTransaction();
+            
+            // Buscar pessoa_id do usuário
+            $stmt = $pdo->prepare("SELECT pessoa_id FROM usuario WHERE usuario_id = ? LIMIT 1");
+            $stmt->execute([$userId]);
+            $usuarioRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$usuarioRow) {
+                throw new \Exception('Usuário não encontrado');
+            }
+            
+            $pessoaId = (int)$usuarioRow['pessoa_id'];
+            
+            $nome = Request::post('nome', '');
+            $email = Request::post('email', '');
 
             // Validação
-            if (empty($dados['nome'])) {
-                Response::error('Nome é obrigatório');
+            if (!empty($nome) && strlen($nome) < 3) {
+                Response::error('Nome deve ter pelo menos 3 caracteres');
             }
 
-            if (!Helper::validarEmail($dados['email'])) {
+            if (!empty($email) && !Helper::validarEmail($email)) {
                 Response::error('Email inválido');
             }
 
-            // Atualizar senha se fornecida
-            $senha = Request::post('senha', '');
-            $senhaNova = Request::post('senha_nova', '');
+            // Atualizar pessoa
+            $camposUpdate = [];
+            $valoresUpdate = [];
             
-            if (!empty($senha) && !empty($senhaNova)) {
-                // Verificar senha atual
-                $tabela = $userType === 'pf' ? 'usuarios_pf' : 'usuarios_pj';
-                $usuario = $db->table($tabela)
-                    ->where('id', $userId)
-                    ->first();
-                
-                if (!Helper::verificarSenha($senha, $usuario['senha'])) {
-                    Response::error('Senha atual incorreta');
+            if (!empty($nome)) {
+                $camposUpdate[] = "nome = ?";
+                $valoresUpdate[] = $nome;
+            }
+            
+            if (!empty($email)) {
+                // Verificar se email já existe (exceto para este usuário)
+                $stmt = $pdo->prepare("SELECT pessoa_id FROM pessoa WHERE email = ? AND pessoa_id != ? LIMIT 1");
+                $stmt->execute([$email, $pessoaId]);
+                if ($stmt->fetch()) {
+                    throw new \Exception('Email já está em uso por outro usuário');
                 }
                 
-                // Validar nova senha
-                if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,20}$/', $senhaNova)) {
-                    Response::error('A nova senha deve ter entre 8 e 20 caracteres, letras, números e um caractere especial.');
-                }
-                
-                $dados['senha'] = Helper::hashSenha($senhaNova);
+                $camposUpdate[] = "email = ?";
+                $valoresUpdate[] = $email;
+            }
+            
+            if (!empty($camposUpdate)) {
+                $valoresUpdate[] = $pessoaId;
+                $sql = "UPDATE pessoa SET " . implode(', ', $camposUpdate) . " WHERE pessoa_id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($valoresUpdate);
+            }
+            
+            // Atualizar login se email foi alterado
+            if (!empty($email)) {
+                $stmt = $pdo->prepare("UPDATE usuario SET login = ? WHERE usuario_id = ?");
+                $stmt->execute([$email, $userId]);
             }
 
-            // Atualizar no banco
-            $tabela = $userType === 'pf' ? 'usuarios_pf' : 'usuarios_pj';
-            $resultado = $db->table($tabela)
-                ->where('id', $userId)
-                ->update($dados);
-
-            if ($resultado) {
-                // Atualizar sessão
-                Session::set('user_nome', $dados['nome']);
-                Session::set('user_email', $dados['email']);
-                
-                Response::success('Perfil atualizado com sucesso!');
-            } else {
-                Response::error('Erro ao atualizar perfil');
+            $pdo->commit();
+            
+            // Atualizar sessão
+            if (!empty($nome)) {
+                Session::set('user_nome', $nome);
             }
+            if (!empty($email)) {
+                Session::set('user_email', $email);
+            }
+            
+            Response::success('Perfil atualizado com sucesso!');
 
         } catch (\Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             Response::error('Erro ao atualizar perfil: ' . $e->getMessage());
         }
         break;

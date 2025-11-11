@@ -63,7 +63,7 @@ switch ($acao) {
             
             // Verificar se já se candidatou
             $sqlJaCandidatou = "SELECT 1 FROM candidatura WHERE vaga_id = ? AND curriculo_id = ?";
-            $resultJaCandidatou = $db->dbSelect($sqlJaCandidatou, [$vagaId, $curriculumId]);
+            $resultJaCandidatou = $db->dbSelect($sqlJaCandidatou, [$vagaId, $curriculoId]);
             $jaCandidatou = $db->dbBuscaArray($resultJaCandidatou);
             
             if ($jaCandidatou) {
@@ -72,18 +72,22 @@ switch ($acao) {
             
             // Criar candidatura no modelo normalizado
             $statusPendenteId = null;
-            $rowSt = $db->dbSelect("SELECT status_candidatura_id FROM status_candidatura WHERE descricao = 'Pendente' LIMIT 1");
+            $rowSt = $db->dbSelect("SELECT status_candidatura_id FROM status_candidatura WHERE codigo = 'PENDENTE' LIMIT 1");
             $st = $db->dbBuscaArray($rowSt);
             $statusPendenteId = $st ? (int)$st['status_candidatura_id'] : null;
+            
+            if (!$statusPendenteId) {
+                Response::error('Status de candidatura não configurado. Contate o administrador.');
+            }
 
             $db->dbInsert(
-                "INSERT INTO candidatura (vaga_id, curriculo_id, status_candidatura_id, data_candidatura) VALUES (?, ?, ?, ?)",
-                [$vagaId, $curriculumId, $statusPendenteId, date('Y-m-d H:i:s')]
+                "INSERT INTO candidatura (vaga_id, curriculo_id, status_candidatura_id, data_candidatura) VALUES (?, ?, ?, NOW())",
+                [$vagaId, $curriculoId, $statusPendenteId]
             );
             
             Response::success('Candidatura enviada com sucesso!', [
                 'vaga_id' => $vagaId,
-                'curriculo_id' => $curriculumId
+                'curriculo_id' => $curriculoId
             ]);
             
         } catch (\Exception $e) {

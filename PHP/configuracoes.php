@@ -39,25 +39,27 @@ switch ($acao) {
                 Response::error('A senha deve ter entre 8 e 20 caracteres, letras, números e um caractere especial.');
             }
 
-            // Buscar usuário
-            $tabela = $userType === 'pf' ? 'usuarios_pf' : 'usuarios_pj';
-            $usuario = $db->table($tabela)
-                ->where('id', $userId)
-                ->first();
+            // Buscar usuário usando schema normalizado
+            $pdo = $db->connect();
+            $stmt = $pdo->prepare("SELECT u.senha_hash, u.usuario_id 
+                                   FROM usuario u 
+                                   WHERE u.usuario_id = ? AND u.ativo = 1
+                                   LIMIT 1");
+            $stmt->execute([$userId]);
+            $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if (!$usuario) {
                 Response::error('Usuário não encontrado');
             }
 
             // Verificar senha atual
-            if (!Helper::verificarSenha($senhaAtual, $usuario['senha'])) {
+            if (!Helper::verificarSenha($senhaAtual, $usuario['senha_hash'])) {
                 Response::error('Senha atual incorreta');
             }
 
             // Atualizar senha
-            $resultado = $db->table($tabela)
-                ->where('id', $userId)
-                ->update(['senha' => Helper::hashSenha($senhaNova)]);
+            $stmt = $pdo->prepare("UPDATE usuario SET senha_hash = ? WHERE usuario_id = ?");
+            $resultado = $stmt->execute([Helper::hashSenha($senhaNova), $userId]);
 
             if ($resultado) {
                 Response::success('Senha alterada com sucesso!');
@@ -81,20 +83,43 @@ switch ($acao) {
 
             $senha = Request::post('senha', '');
             
-            // Verificar senha
-            $tabela = $userType === 'pf' ? 'usuarios_pf' : 'usuarios_pj';
-            $usuario = $db->table($tabela)
-                ->where('id', $userId)
-                ->first();
+            // Verificar senha usando schema normalizado
+            $pdo = $db->connect();
+            $stmt = $pdo->prepare("SELECT u.senha_hash, u.usuario_id, p.pessoa_id
+                                   FROM usuario u
+                                   INNER JOIN pessoa p ON p.pessoa_id = u.pessoa_id
+                                   WHERE u.usuario_id = ? AND u.ativo = 1 AND p.ativo = 1
+                                   LIMIT 1");
+            $stmt->execute([$userId]);
+            $usuario = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            if (!Helper::verificarSenha($senha, $usuario['senha'])) {
+            if (!$usuario) {
+                Response::error('Usuário não encontrado');
+            }
+
+            if (!Helper::verificarSenha($senha, $usuario['senha_hash'])) {
                 Response::error('Senha incorreta');
             }
 
-            // Desativar conta (soft delete)
-            $resultado = $db->table($tabela)
-                ->where('id', $userId)
-                ->update(['ativo' => 0]);
+            // Desativar conta (soft delete) - desativar pessoa e usuário
+            $pdo->beginTransaction();
+            
+            $stmt = $pdo->prepare("UPDATE pessoa SET ativo = 0 WHERE pessoa_id = ?");
+            $stmt->execute([$usuario['pessoa_id']]);
+            
+            $stmt = $pdo->prepare("UPDATE usuario SET ativo = 0 WHERE usuario_id = ?");
+            $resultado = $stmt->execute([$userId]);
+            
+            // Se for PJ, desativar empresa também
+            if ($userType === 'pj') {
+                $empresaId = Session::get('empresa_id');
+                if ($empresaId) {
+                    $stmt = $pdo->prepare("UPDATE empresa SET ativo = 0 WHERE empresa_id = ?");
+                    $stmt->execute([$empresaId]);
+                }
+            }
+            
+            $pdo->commit();
 
             if ($resultado) {
                 // Limpar sessão

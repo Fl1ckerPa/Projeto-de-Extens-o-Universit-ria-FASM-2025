@@ -4,10 +4,8 @@
  * Carrega todas as bibliotecas necessárias
  */
 
-// Inicia a sessão se ainda não estiver iniciada
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Inicia a sessão segura se ainda não estiver iniciada
+// Session::startSecure() será chamado automaticamente quando necessário
 
 // Carrega configurações
 require_once __DIR__ . '/config.php';

@@ -6,10 +6,16 @@
 
 /**
  * Verifica se usuário está autenticado
+ * Reforçado com validação de sessão ativa
  */
 function verificarAutenticacao()
 {
-    if (!Session::get('user_id')) {
+    Session::startSecure();
+    
+    $userId = Session::get('user_id');
+    $userType = Session::get('user_type');
+    
+    if (!$userId || !$userType) {
         if (Request::isPost() || strpos($_SERVER['REQUEST_URI'], '.php') !== false) {
             Response::error('Acesso não autorizado. Faça login para continuar.', null, 401);
         } else {
@@ -17,6 +23,23 @@ function verificarAutenticacao()
             exit;
         }
     }
+    
+    // Verificar se sessão não expirou (opcional: timeout de 2 horas)
+    $lastActivity = Session::get('last_activity', 0);
+    $sessionTimeout = 7200; // 2 horas em segundos
+    
+    if ($lastActivity > 0 && (time() - $lastActivity) > $sessionTimeout) {
+        Session::destroyAll();
+        if (Request::isPost() || strpos($_SERVER['REQUEST_URI'], '.php') !== false) {
+            Response::error('Sessão expirada. Faça login novamente.', null, 401);
+        } else {
+            header('Location: ../HTML/login.html?expired=1');
+            exit;
+        }
+    }
+    
+    // Atualizar última atividade
+    Session::set('last_activity', time());
 }
 
 /**

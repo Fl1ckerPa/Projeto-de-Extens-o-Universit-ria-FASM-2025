@@ -172,40 +172,86 @@ try {
         }
     }
     
-    // Verificar se já existe currículo com esse email (atualizar ou inserir)
-    $curriculoExistente = $db->table('curriculos')
-        ->where('email', $dados['email'])
-        ->first();
+    // Usar schema normalizado: buscar pessoa_id pelo email ou criar pessoa
+    $pdo = $db->connect();
+    Schema::ensureNormalizedSchema($pdo);
     
-    $dadosInsert = [
-        'nome' => $dados['nome'],
-        'endereco' => $dados['endereco'],
-        'telefone' => $dados['telefone'],
-        'email' => $dados['email'],
-        'genero' => $dados['genero'],
-        'estado_civil' => $dados['estado_civil'],
-        'nascimento' => $dados['nascimento'],
-        'escolaridade' => $dados['escolaridade'],
-        'outros_cursos' => $dados['outros_cursos'] ?: null,
-        'foto' => $dados['foto'] ?? null,
-        'certificado' => $dados['certificado'] ?? null,
-        'curriculo' => $dados['curriculo'] ?? null,
-        'experiencias' => count($experiencias) > 0 ? json_encode($experiencias) : null,
-        'created_at' => date('Y-m-d H:i:s')
-    ];
+    $pdo->beginTransaction();
     
-    if ($curriculoExistente) {
-        // Atualizar currículo existente
-        $resultado = $db->table('curriculos')
-            ->where('email', $dados['email'])
-            ->update($dadosInsert);
-        $id = $curriculoExistente['id'];
-    } else {
-        // Inserir novo currículo
-        $id = $db->table('curriculos')->insert($dadosInsert);
-        if (!$id) {
-            throw new \Exception('Erro ao inserir currículo no banco de dados');
+    try {
+        // Buscar ou criar pessoa
+        $stmt = $pdo->prepare('SELECT pessoa_id FROM pessoa WHERE email = ? LIMIT 1');
+        $stmt->execute([$dados['email']]);
+        $pessoaRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if ($pessoaRow) {
+            $pessoaId = (int)$pessoaRow['pessoa_id'];
+        } else {
+            // Criar nova pessoa
+            $stmt = $pdo->prepare('INSERT INTO pessoa (nome, email, ativo) VALUES (?, ?, 1)');
+            $stmt->execute([$dados['nome'], $dados['email']]);
+            $pessoaId = (int)$pdo->lastInsertId();
         }
+        
+        // Verificar se já existe currículo para esta pessoa
+        $stmt = $pdo->prepare('SELECT curriculo_id FROM curriculo WHERE pessoa_id = ? LIMIT 1');
+        $stmt->execute([$pessoaId]);
+        $curriculoRow = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        $dadosInsert = [
+            'pessoa_id' => $pessoaId,
+            'nome' => $dados['nome'],
+            'endereco' => $dados['endereco'],
+            'telefone' => $dados['telefone'],
+            'email' => $dados['email'],
+            'genero' => $dados['genero'],
+            'estado_civil' => $dados['estado_civil'] ?: null,
+            'nascimento' => $dados['nascimento'],
+            'escolaridade' => $dados['escolaridade'],
+            'outros_cursos' => $dados['outros_cursos'] ?: null,
+            'foto' => $dados['foto'] ?? null,
+            'certificado' => $dados['certificado'] ?? null,
+            'curriculo' => $dados['curriculo'] ?? null,
+            'experiencias' => count($experiencias) > 0 ? json_encode($experiencias, JSON_UNESCAPED_UNICODE) : null
+        ];
+        
+        if ($curriculoRow) {
+            // Atualizar currículo existente
+            $curriculoId = (int)$curriculoRow['curriculo_id'];
+            $fields = [];
+            $values = [];
+            foreach ($dadosInsert as $key => $value) {
+                if ($key !== 'pessoa_id') { // pessoa_id não atualiza
+                    $fields[] = "`{$key}` = ?";
+                    $values[] = $value;
+                }
+            }
+            $values[] = $curriculoId;
+            $sql = "UPDATE curriculo SET " . implode(', ', $fields) . " WHERE curriculo_id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($values);
+            $id = $curriculoId;
+        } else {
+            // Inserir novo currículo
+            $fields = implode(', ', array_keys($dadosInsert));
+            $placeholders = implode(', ', array_fill(0, count($dadosInsert), '?'));
+            $sql = "INSERT INTO curriculo ({$fields}) VALUES ({$placeholders})";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(array_values($dadosInsert));
+            $id = (int)$pdo->lastInsertId();
+        }
+        
+        // Salvar curriculo_id na sessão se usuário estiver logado
+        if (Session::get('user_id')) {
+            Session::set('curriculo_id', $id);
+        }
+        
+        $pdo->commit();
+    } catch (\Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
     }
 } catch (\Exception $e) {
     $erros[] = 'Erro ao salvar: ' . $e->getMessage();

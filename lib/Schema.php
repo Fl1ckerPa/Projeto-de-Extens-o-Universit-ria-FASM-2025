@@ -147,14 +147,68 @@ class Schema
                 cnpj VARCHAR(14) NOT NULL,
                 nome_social VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NULL,
+                site VARCHAR(500) NULL,
+                linkedin VARCHAR(500) NULL,
+                sobre TEXT NULL,
+                funcionarios VARCHAR(50) NULL,
+                fundacao YEAR NULL,
+                logradouro VARCHAR(255) NULL,
+                numero VARCHAR(20) NULL,
+                complemento VARCHAR(100) NULL,
+                bairro VARCHAR(100) NULL,
+                cep VARCHAR(8) NULL,
                 cidade_id INT NULL,
+                logo VARCHAR(500) NULL,
                 ativo TINYINT(1) NOT NULL DEFAULT 1,
                 data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (empresa_id),
                 UNIQUE KEY uk_empresa_cnpj (cnpj),
                 KEY idx_empresa_cidade (cidade_id),
-                CONSTRAINT fk_empresa_cidade FOREIGN KEY (cidade_id) REFERENCES cidade (cidade_id)
+                CONSTRAINT fk_empresa_cidade FOREIGN KEY (cidade_id) REFERENCES cidade (cidade_id) ON DELETE SET NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            // telefone
+            "CREATE TABLE IF NOT EXISTS telefone (
+                telefone_id INT NOT NULL AUTO_INCREMENT,
+                numero VARCHAR(20) NOT NULL,
+                tipo ENUM('mobile', 'f', 'm') NOT NULL DEFAULT 'mobile',
+                PRIMARY KEY (telefone_id),
+                KEY idx_telefone_numero (numero)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            // empresa_telefone
+            "CREATE TABLE IF NOT EXISTS empresa_telefone (
+                empresa_telefone_id INT NOT NULL AUTO_INCREMENT,
+                empresa_id INT NOT NULL,
+                telefone_id INT NOT NULL,
+                principal TINYINT(1) DEFAULT 0,
+                PRIMARY KEY (empresa_telefone_id),
+                KEY idx_empresa_telefone_empresa (empresa_id),
+                KEY idx_empresa_telefone_telefone (telefone_id),
+                CONSTRAINT fk_empresa_telefone_empresa FOREIGN KEY (empresa_id) REFERENCES empresa (empresa_id) ON DELETE CASCADE,
+                CONSTRAINT fk_empresa_telefone_telefone FOREIGN KEY (telefone_id) REFERENCES telefone (telefone_id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            // curriculo
+            "CREATE TABLE IF NOT EXISTS curriculo (
+                curriculo_id INT NOT NULL AUTO_INCREMENT,
+                pessoa_id INT NOT NULL,
+                nome VARCHAR(160) NOT NULL,
+                endereco VARCHAR(255) NOT NULL,
+                telefone VARCHAR(32) NOT NULL,
+                email VARCHAR(160) NOT NULL,
+                genero VARCHAR(20) NOT NULL,
+                estado_civil VARCHAR(20) NULL,
+                nascimento DATE NOT NULL,
+                escolaridade VARCHAR(100) NOT NULL,
+                outros_cursos TEXT NULL,
+                foto VARCHAR(255) NULL,
+                certificado VARCHAR(255) NULL,
+                curriculo VARCHAR(255) NULL,
+                experiencias JSON NULL,
+                data_cadastro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (curriculo_id),
+                KEY idx_curriculo_pessoa (pessoa_id),
+                CONSTRAINT fk_curriculo_pessoa FOREIGN KEY (pessoa_id) REFERENCES pessoa (pessoa_id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         ];
 
