@@ -1,16 +1,13 @@
-/* -------------------- */
-/* Tokens de design     */
-/* -------------------- */
 :root {
   --brand-900: #0e2233;
   --brand-700: #1b3b5a;
   --brand-500: #003A8C;
-  /* primária */
+
   --brand-300: #8fb6e8;
   --brand-100: #e7f0fb;
 
   --accent-500: #ffb703;
-  /* destaque */
+
   --success-500: #2ea44f;
   --warning-500: #f59f00;
   --danger-500: #d6336c;
@@ -23,9 +20,6 @@
 }
 
 
-/* -------------------- */
-/* Base                 */
-/* -------------------- */
 body {
   background: var(--bg-100);
   color: var(--text-900);
@@ -40,9 +34,6 @@ body {
 }
 
 
-/* -------------------- */
-/* Topbar               */
-/* -------------------- */
 #topbar {
   background: var(--brand-500);
 }
@@ -70,9 +61,6 @@ body {
 }
 
 
-/* -------------------- */
-/* KPIs                 */
-/* -------------------- */
 .kpi {
   transition: transform .1s ease, box-shadow .2s ease;
   cursor: pointer;
@@ -113,9 +101,6 @@ body {
 }
 
 
-/* -------------------- */
-/* Tabela               */
-/* -------------------- */
 .table thead th {
   background: var(--brand-100);
   color: var(--text-700);
@@ -141,9 +126,6 @@ body {
 }
 
 
-/* -------------------- */
-/* Form e Botões        */
-/* -------------------- */
 .form-label {
   color: var(--text-700);
 }
@@ -159,9 +141,7 @@ body {
 }
 
 
-/* -------------------- */
-/* Badges de status     */
-/* -------------------- */
+
 .text-bg-success {
   background-color: var(--success-500) !important;
 }

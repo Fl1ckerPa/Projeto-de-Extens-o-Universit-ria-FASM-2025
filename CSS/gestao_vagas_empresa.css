@@ -1,6 +1,3 @@
-/* -------------------- */
-/* Tokens de design     */
-/* -------------------- */
 :root {
   --brand-900: #0e2233;
   --brand-700: #1b3b5a;
@@ -22,9 +19,6 @@
   --white: #ffffff;
 }
 
-/* -------------------- */
-/* Base                 */
-/* -------------------- */
 body {
   background: var(--bg-100);
   color: var(--text-900);
@@ -46,9 +40,7 @@ body {
   box-shadow: inset 0 0 0 9999px var(--tbl-bg, transparent);
 }
 
-/* -------------------- */
-/* Topbar               */
-/* -------------------- */
+
 .bg-azulPrimario {
   background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%) !important;
 }
@@ -108,9 +100,7 @@ nav.bg-azulPrimario form[role="search"] .form-control {
   transform: translateY(-1px);
 }
 
-/* -------------------- */
-/* KPIs                 */
-/* -------------------- */
+
 .kpi {
   transition: transform .2s ease, box-shadow .3s ease;
   cursor: pointer;
@@ -164,9 +154,7 @@ nav.bg-azulPrimario form[role="search"] .form-control {
   transform: scale(1.1);
 }
 
-/* -------------------- */
-/* Tabela               */
-/* -------------------- */
+
 .table thead th {
   background: var(--brand-100);
   color: var(--text-700);
@@ -189,7 +177,7 @@ nav.bg-azulPrimario form[role="search"] .form-control {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Badges de status */
+
 .badge.bg-status-aberta {
   background: var(--success-500) !important;
 }
@@ -243,9 +231,7 @@ nav.bg-azulPrimario form[role="search"] .form-control {
   background: #007bff;
 }
 
-/* -------------------- */
-/* Form e Botões        */
-/* -------------------- */
+
 .form-label {
   color: var(--text-700);
   font-weight: 600;
@@ -267,7 +253,7 @@ nav.bg-azulPrimario form[role="search"] .form-control {
   box-shadow: 0 0 0 0.2rem rgba(0, 58, 140, 0.15);
 }
 
-/* Resetar estilos do form-control na navbar para usar padrão do Bootstrap */
+
 nav.bg-azulPrimario .form-control {
   border: 1px solid #ced4da !important;
   border-radius: 0.375rem !important;
@@ -335,9 +321,9 @@ nav.bg-azulPrimario .form-control:focus {
   transform: translateY(-1px);
 }
 
-/* -------------------- */
-/* Modal customizado    */
-/* -------------------- */
+
+/* Modal Custom */
+
 .modal-content {
   border-radius: 15px;
   border: none;
@@ -367,7 +353,7 @@ nav.bg-azulPrimario .form-control:focus {
   background: var(--bg-100);
 }
 
-/* Scrollbar customizada para modal */
+/* Scrollbar custom para o modal */
 .modal-body::-webkit-scrollbar {
   width: 6px;
 }
@@ -386,9 +372,8 @@ nav.bg-azulPrimario .form-control:focus {
   background: var(--brand-500);
 }
 
-/* -------------------- */
-/* Cards de candidatos  */
-/* -------------------- */
+
+/* Card dos candidatos */
 .candidato-card {
   border: 1px solid #e9ecef;
   border-radius: 12px;
@@ -439,9 +424,7 @@ nav.bg-azulPrimario .form-control:focus {
   gap: 0.5rem;
 }
 
-/* -------------------- */
 /* Currículo detalhado  */
-/* -------------------- */
 .curriculo-section {
   background: var(--white);
   border-radius: 12px;
@@ -463,9 +446,8 @@ nav.bg-azulPrimario .form-control:focus {
   line-height: 1.6;
 }
 
-/* -------------------- */
-/* Estados de loading   */
-/* -------------------- */
+
+/* Estados de loading */
 .btn.loading {
   position: relative;
   color: transparent;
@@ -563,9 +545,9 @@ nav.bg-azulPrimario .form-control:focus {
   }
 }
 
-/* -------------------- */
-/* Animações            */
-/* -------------------- */
+
+/* Animações */
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -586,9 +568,8 @@ nav.bg-azulPrimario .form-control:focus {
   animation: fadeInUp 0.4s ease-out;
 }
 
-/* -------------------- */
+
 /* Melhorias de acessibilidade */
-/* -------------------- */
 .form-control:focus,
 .form-select:focus {
   outline: none;
@@ -603,9 +584,7 @@ nav.bg-azulPrimario .form-control:focus {
   outline-offset: 2px;
 }
 
-/* -------------------- */
 /* Utilitários          */
-/* -------------------- */
 .text-truncate-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

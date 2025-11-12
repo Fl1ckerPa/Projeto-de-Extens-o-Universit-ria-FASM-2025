@@ -1,7 +1,3 @@
--- ============================================================
--- Script SQL Corrigido - Descubra Muriaé
--- Estrutura Normalizada Compatível com Backend PHP
--- ============================================================
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -14,7 +10,7 @@ CREATE SCHEMA IF NOT EXISTS `descubra_muriae` DEFAULT CHARACTER SET utf8mb4 COLL
 USE `descubra_muriae`;
 
 -- -----------------------------------------------------
--- Table `cidade`
+-- Tabela cidade
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `cidade`;
 CREATE TABLE IF NOT EXISTS `cidade` (
@@ -26,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `cidade` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `usuario_tipo`
+-- Tabela usuario_tipo
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `usuario_tipo`;
 CREATE TABLE IF NOT EXISTS `usuario_tipo` (
@@ -38,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `usuario_tipo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `pessoa`
+-- Tabela pessoa
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `pessoa`;
 CREATE TABLE IF NOT EXISTS `pessoa` (
@@ -57,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `pessoa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `usuario`
+-- Tabela usuario
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `usuario`;
 CREATE TABLE IF NOT EXISTS `usuario` (
@@ -78,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `empresa`
+-- Tabela empresa
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `empresa`;
 CREATE TABLE IF NOT EXISTS `empresa` (
@@ -108,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `empresa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `telefone`
+-- Tabela telefone
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `telefone`;
 CREATE TABLE IF NOT EXISTS `telefone` (
@@ -120,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `telefone` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `empresa_telefone`
+-- Tabela empresa_telefone
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `empresa_telefone`;
 CREATE TABLE IF NOT EXISTS `empresa_telefone` (
@@ -136,7 +132,7 @@ CREATE TABLE IF NOT EXISTS `empresa_telefone` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `curriculo`
+-- Tabela curriculo
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `curriculo`;
 CREATE TABLE IF NOT EXISTS `curriculo` (
@@ -163,7 +159,7 @@ CREATE TABLE IF NOT EXISTS `curriculo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `cargo`
+-- Tabela cargo
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `cargo`;
 CREATE TABLE IF NOT EXISTS `cargo` (
@@ -174,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `cargo` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `modalidade_trabalho`
+-- Tabela modalidade_trabalho
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `modalidade_trabalho`;
 CREATE TABLE IF NOT EXISTS `modalidade_trabalho` (
@@ -186,7 +182,7 @@ CREATE TABLE IF NOT EXISTS `modalidade_trabalho` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `vinculo_contratual`
+-- Tabela vinculo_contratual
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `vinculo_contratual`;
 CREATE TABLE IF NOT EXISTS `vinculo_contratual` (
@@ -198,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `vinculo_contratual` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `status_vaga`
+-- Tabela status_vaga
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `status_vaga`;
 CREATE TABLE IF NOT EXISTS `status_vaga` (
@@ -210,7 +206,7 @@ CREATE TABLE IF NOT EXISTS `status_vaga` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `categoria_vaga`
+-- Tabela categoria_vaga
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `categoria_vaga`;
 CREATE TABLE IF NOT EXISTS `categoria_vaga` (
@@ -222,7 +218,7 @@ CREATE TABLE IF NOT EXISTS `categoria_vaga` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `vaga`
+-- Tabela vaga
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `vaga`;
 CREATE TABLE IF NOT EXISTS `vaga` (
@@ -259,7 +255,7 @@ CREATE TABLE IF NOT EXISTS `vaga` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `status_candidatura`
+-- Tabela status_candidatura
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `status_candidatura`;
 CREATE TABLE IF NOT EXISTS `status_candidatura` (
@@ -271,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `status_candidatura` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `candidatura`
+-- Tabela candidatura
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `candidatura`;
 CREATE TABLE IF NOT EXISTS `candidatura` (
@@ -293,7 +289,7 @@ CREATE TABLE IF NOT EXISTS `candidatura` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `administradores`
+-- Tabela administradores
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `administradores`;
 CREATE TABLE IF NOT EXISTS `administradores` (
@@ -310,7 +306,7 @@ CREATE TABLE IF NOT EXISTS `administradores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- Table `reset_tokens`
+-- Tabela reset_tokens
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `reset_tokens`;
 CREATE TABLE IF NOT EXISTS `reset_tokens` (
@@ -328,7 +324,7 @@ CREATE TABLE IF NOT EXISTS `reset_tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
--- INSERTS - Dados Iniciais
+-- Tabela  Dados Iniciais
 -- -----------------------------------------------------
 
 -- Usuario Tipo

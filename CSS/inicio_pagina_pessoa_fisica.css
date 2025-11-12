@@ -119,10 +119,9 @@ body {
 /* diminuir altura do textarea de atividades para evitar bloco muito alto */
 #experienciasContainer textarea.form-control {
   min-height: 72px;
-  /* ~3-4 linhas compactas */
   max-height: 140px;
   resize: vertical;
-  /* ainda permite expandir se necessário */
+  
 }
 
 /* limitar altura da área rolável das experiências para não gerar grandes vãos visuais */
@@ -137,7 +136,7 @@ body {
   padding-top: 16px;
   padding-bottom: 16px;
   margin-top: auto;
-  /* empurra o footer para o final */
+  
 }
 
 .site-footer .footer-link {
